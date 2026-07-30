@@ -4321,8 +4321,8 @@ const LZMAP = {
   "The targeted application, done right.":"La aplicación dirigida, como debe ser.",
   "Double the exosome dose + hyperbaric recovery + an extra specialist consultation.":"El doble de dosis de exosomas + recuperación hiperbárica + una consulta adicional con especialista.",
   "Your treatment + a full-body IV of 52 billion exosomes + hyperbaric oxygen recovery.":"Su tratamiento + una IV de cuerpo completo de 52 mil millones de exosomas + recuperación con oxígeno hiperbárico.",
-  "Everything in Advanced + a Full-Body MRI to map your whole-body health.":"Todo lo de Advanced + una resonancia de cuerpo completo para mapear su salud integral.",
-  "Everything in Advanced, plus 100 million systemic stem cells by IV, cancer-marker screening and functional-medicine review.":"Todo lo de Advanced, más 100 millones de células madre sistémicas por vía intravenosa, tamizaje de marcadores tumorales y revisión de medicina funcional.",
+  "Everything in the Essential treatment + a Full-Body MRI to map your whole-body health.":"Todo lo del tratamiento Essential + una resonancia de cuerpo completo para mapear su salud integral.",
+  "Everything in the Essential treatment, plus 100 million systemic stem cells by IV, cancer-marker screening and functional-medicine review.":"Todo lo del tratamiento Essential, más 100 millones de células madre sistémicas por vía intravenosa, tamizaje de marcadores tumorales y revisión de medicina funcional.",
   // ---- tier tag CUSTOM (per recipe) ----
   "Face + Full-Body IV rejuvenation.":"Rejuvenecimiento de rostro + IV de cuerpo completo.",
   "Hair + Full-Body IV rejuvenation.":"Rejuvenecimiento de cabello + IV de cuerpo completo.",
@@ -6156,7 +6156,7 @@ function planFeatures(c, tier){
   if(tier==="adv") return ["Everything in the Essential treatment",
       "+ Full-body IV of "+exoLabel(TIER_EXO.adv),
       "+ Hyperbaric oxygen therapy"].map(LZ);
-  return ["Everything in the Advanced treatment","+ "+mscLabel(TIER_EXO.comMsc)+" systemic stem cells, full-body IV","Cancer markers + functional review","Full-body regenerative boost"].map(LZ);
+  return ["Everything in the Essential treatment","+ "+mscLabel(TIER_EXO.comMsc)+" systemic stem cells, full-body IV","Cancer markers + functional review","Full-body regenerative boost"].map(LZ);
 }
 // A built combo overlays the preset; when one is active IT decides single-price,
 // never the preset underneath (that leaked "Combo IV and Back" state onto other cases).
@@ -6502,7 +6502,7 @@ function planFullList(c, tier){
       L.push("+ Full-body IV of "+ADV_EXO_B+" billion exosomes");
       L.push("+ Hyperbaric oxygen therapy");
     } else {
-      L.push("Everything in the Advanced treatment");
+      L.push("Everything in the Essential treatment");
       /* ⚠ El IV sistémico NO se ofrece si el paciente YA compró uno —sería
          cobrarle dos veces lo mismo—, pero la comprobación tiene que mirar el
          CARRITO, no comboSignals().iv: esa señal se pone en true en cuanto el
