@@ -464,10 +464,11 @@ body.p3z4 .planmx td.mx-n{font-size:10.6px;} body.p3z4 .planmx thead th{padding:
 .opt{margin-top:20px;}
 .opt .oh{font:700 12.3px 'Pop'; letter-spacing:.26em; color:var(--cyan-d); text-transform:uppercase; margin-bottom:10px;}
 .optgrid{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
-.optchip{flex:1; min-width:150px; border:1px solid rgba(48,108,168,.12); border-radius:14px; padding:12px 16px; background:linear-gradient(180deg,#FFFFFF,var(--cream));
-  display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 9px rgba(20,55,92,.04);}
-.optchip .on{font:600 15.1px 'Pop'; color:var(--brand-ink);}
-.optchip .op{font:600 15.1px 'Pop'; color:var(--cyan-d); font-feature-settings:'tnum','lnum'; letter-spacing:-.01em;}
+.optchip{flex:1; min-width:150px; border:2.5px solid var(--emerald); border-radius:16px; padding:18px 20px; background:linear-gradient(135deg,rgba(18,160,136,.07),rgba(60,195,168,.04));
+  display:flex; flex-direction:column; justify-content:space-between; align-items:flex-start; box-shadow:0 4px 14px rgba(18,160,136,.12); transition:all .25s ease;}
+.optchip:hover{border-color:var(--emerald-d); box-shadow:0 8px 20px rgba(18,160,136,.18); transform:translateY(-3px);}
+.optchip .on{font:700 16.2px 'Pop'; color:var(--brand-ink); letter-spacing:-.01em; margin-bottom:8px;}
+.optchip .op{font:800 17px 'Pop'; color:var(--emerald); font-feature-settings:'tnum','lnum'; letter-spacing:-.02em;}
 
 /* ================= PAGE 4 — SCHEDULE · INVESTMENT · WHY US ================= */
 .p4cols{display:grid; grid-template-columns:1fr 288px; gap:24px; margin-top:18px; align-items:start;}
@@ -751,7 +752,8 @@ body.p4-wide .tl{padding-left:4px;}
 .contact .w2{font:500 13.4px 'Pop'; color:rgba(255,255,255,.7); margin-top:3px;}
 .contact .w b{color:var(--cyan-glow); font:800 19px 'Pop';}
 .cqr{margin-left:auto; text-align:center;}
-.cqr .l{font:800 9px 'Pop'; letter-spacing:.14em; color:var(--cyan-l); text-transform:uppercase; margin-top:5px;}
+.cqr svg{width:140px !important; height:140px !important;}
+.cqr .l{font:800 10px 'Pop'; letter-spacing:.14em; color:var(--cyan-l); text-transform:uppercase; margin-top:8px;}
 /* Tira de métodos de pago: una línea, no dos tarjetas. Va pegada a la tabla del
    banco para que se lean como un solo bloque. */
 .paystrip{display:flex; gap:10px; margin-top:11px;}
@@ -2150,18 +2152,21 @@ h2.big i{ color:var(--emerald) !important; }
       </div>
     </div>
 
-    <!-- Métodos de pago compactados en una tira (Alejo, 30-jul-2026). Eran dos
-         tarjetas de 95px que repetían el "no extra fee" del título de la tabla de
-         abajo. Así el banco se lee como UN bloque elegante y los 5 pasos recuperan
-         el alto que necesitaban para ser el protagonista de la página. -->
-    <div class="paystrip">
-      <div class="ps-i rec"><b>Bank Transfer or Zelle</b><span>No extra fee · recommended</span></div>
-      <div class="ps-i"><b>Stripe</b><span>Card link · 3.5% fee</span></div>
+    <!-- Optional add-ons a página 5 (Alejo, 30-jul-2026). -->
+    <div class="opt">
+      <div class="oh">Optional add-ons · any plan</div>
+      <div class="optgrid">
+        <div class="optchip"><span class="on" contenteditable="true">Hair treatment with stem cells</span><span class="op" data-usd="2500">$2,500</span></div>
+        <div class="optchip"><span class="on" contenteditable="true">Hair treatment with exosomes</span><span class="op" data-usd="400">$400</span></div>
+        <div class="optchip"><span class="on" contenteditable="true">Face treatment with stem cells</span><span class="op" data-usd="2300">$2,300</span></div>
+        <div class="optchip"><span class="on" contenteditable="true">Face treatment with exosomes</span><span class="op" data-usd="400">$400</span></div>
+      </div>
     </div>
+
     <!-- Wire Transfers section se movió a la página 06 (Alejo, 30-jul-2026). -->
     <!-- Términos y reseñas se MUDARON a la página 06 (Alejo, 30-jul-2026). La 05
          queda para lo que el paciente necesita para ACTUAR: los cinco pasos, a
-         quién escribir y a qué cuenta pagar. -->
+         quién escribir, add-ons y a qué cuenta pagar. -->
   </div>
   <div class="pfoot"><span>Stem Cells Colombia · Medellín</span><span>05 / 06</span></div>
 </div>
@@ -2192,16 +2197,6 @@ h2.big i{ color:var(--emerald) !important; }
       </table>
     </div>
 
-    <!-- Optional add-ons (improved version) — moved from page 04 (Alejo, 30-jul-2026). -->
-    <div class="opt">
-      <div class="oh">Optional add-ons · any plan</div>
-      <div class="optgrid">
-        <div class="optchip"><span class="on" contenteditable="true">Hair treatment with stem cells</span><span class="op" data-usd="2500">$2,500</span></div>
-        <div class="optchip"><span class="on" contenteditable="true">Hair treatment with exosomes</span><span class="op" data-usd="400">$400</span></div>
-        <div class="optchip"><span class="on" contenteditable="true">Face treatment with stem cells</span><span class="op" data-usd="2300">$2,300</span></div>
-        <div class="optchip"><span class="on" contenteditable="true">Face treatment with exosomes</span><span class="op" data-usd="400">$400</span></div>
-      </div>
-    </div>
 
     <!-- Métodos de pago (Bank Transfer/Zelle) a página 6 (Alejo, 30-jul-2026). -->
     <div class="paystrip">
