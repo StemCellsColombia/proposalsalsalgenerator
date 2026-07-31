@@ -4930,7 +4930,14 @@ function regexLocalizeES_(s){
     /* Fragmentos que se quedaban en ingles dentro de propuestas en espanol.
        Detectados barriendo los 8 tipos de tratamiento, no de memoria:
        la matriz de planes (p03) y los dos textos de estancia (p04). */
-    .replace(/Systemic stem cells/gi, "Células madre sistémicas")
+    /* Etiquetas de mano/pulgar/dedo: no tenian traduccion y salian enteras en
+       ingles en portada, planes y cronograma. El numero va DELANTE en ingles
+       ("1 Hand Treatment") y detras en espanol. */
+    .replace(/\b1\s+Hand Treatment\b/gi, "Tratamiento de una mano")
+    .replace(/\b2\s+Hands Treatment\b/gi, "Tratamiento de ambas manos")
+    .replace(/\bBoth Hands\b/gi, "Ambas manos")
+    .replace(/\bThumb Treatment\b/gi, "Tratamiento de pulgar")
+    .replace(/\bSystemic stem cells/gi, "Células madre sistémicas")
     .replace(/\bby IV\b/gi, "por vía IV")
     .replace(/\bIntrathecal\b/g, "Intratecal")
 
