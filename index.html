@@ -2114,33 +2114,183 @@ body.p2z5 .cmod-t::before,body.p2z6 .cmod-t::before,body.cond-tight .cmod-t::bef
 }
 .c-sug button:hover{ background:var(--emerald); color:#fff; }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   PANEL DE CONTROL: QUE SE VEAN LAS CAJAS  (Alejo, 31-jul-2026)
+
+   La jefa no distingue las tarjetas ni los campos en su monitor. Medido, no
+   supuesto: el borde de un campo tenía contraste 1,17 contra su propio fondo
+   —blanco sobre blanco con una hairline #E8EEF3—. En una pantalla con brillo
+   o contraste altos eso desaparece por completo, y entonces no hay forma de
+   saber qué es editable ni dónde acaba una tarjeta.
+
+   Se sube el contraste de los bordes por encima de 3 (mínimo para elementos
+   de interfaz), se le da fondo propio a cada tarjeta y a cada campo, y el
+   foco pasa a ser inconfundible.
+
+   ⚠ Todo va dentro de #ctrlPanel: la propuesta impresa no se toca.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Las tarjetas dejan de ser blanco sobre blanco. */
+#ctrlPanel .cgrid .card{
+  background:#FFFFFF;
+  border:1.5px solid #8FA6BB !important;
+  border-radius:10px;
+  box-shadow:0 2px 6px rgba(20,55,92,.10);
+}
+#ctrlPanel .cgrid .card.open{
+  border-color:var(--emerald) !important;
+  box-shadow:0 3px 12px rgba(18,160,136,.16);
+}
+/* La cabecera de cada tarjeta, con fondo: marca dónde empieza y que se pliega. */
+#ctrlPanel .cgrid .card > .ch{
+  background:#EEF3F8;
+  border-bottom:1.5px solid #8FA6BB;
+  border-radius:8px 8px 0 0;
+  padding:8px 11px;
+  cursor:pointer;
+}
+#ctrlPanel .cgrid .card.open > .ch{
+  background:linear-gradient(180deg,rgba(18,160,136,.14),rgba(18,160,136,.07));
+  border-bottom-color:var(--emerald);
+}
+#ctrlPanel .cgrid .card > .ch:hover{ background:#E2EBF3; }
+
+/* Los campos: que se vea que se puede escribir en ellos. */
+#ctrlPanel input,
+#ctrlPanel select,
+#ctrlPanel textarea{
+  background:#F7FAFC !important;
+  /* Medido: con #8FA6BB el contraste contra el propio fondo era 2,40, por
+     debajo del minimo de 3 para elementos de interfaz. Este llega a 3,4. */
+  border:1.5px solid #6E869E !important;
+  border-radius:7px !important;
+  color:var(--ink) !important;
+}
+#ctrlPanel input:hover,
+#ctrlPanel select:hover,
+#ctrlPanel textarea:hover{ border-color:#5E7A94 !important; }
+#ctrlPanel input:focus,
+#ctrlPanel select:focus,
+#ctrlPanel textarea:focus{
+  outline:none !important;
+  border-color:var(--emerald) !important;
+  background:#FFFFFF !important;
+  box-shadow:0 0 0 3px rgba(18,160,136,.22) !important;
+}
+
+/* Lo editable en línea (nombres del carrito, líneas del día) también avisa. */
+#ctrlPanel [contenteditable="true"]{
+  background:#F7FAFC;
+  border:1px dashed #6E869E;
+  border-radius:5px;
+  padding:1px 5px;
+}
+#ctrlPanel [contenteditable="true"]:hover{ background:#EEF3F8; border-style:solid; }
+#ctrlPanel [contenteditable="true"]:focus{
+  outline:none;
+  background:#fff;
+  border:1.5px solid var(--emerald);
+  box-shadow:0 0 0 3px rgba(18,160,136,.20);
+}
+
+/* Las filas del carrito, separadas de verdad. */
+#ctrlPanel .row-i{
+  /* #C4D3E0 daba 1,50 de contraste: la fila del carrito se perdia igual que
+     todo lo demas. */
+  border:1.5px solid #6E869E;
+  border-radius:8px;
+  padding:6px 8px;
+  margin-top:6px;
+  background:#FCFDFE;
+}
+
+/* ══ CORTESÍA: DEJAR DE DESPERDICIAR EL ANCHO (Alejo, 31-jul-2026) ═════════
+   Medido: el bloque ocupa 694px y la tarjeta del regalo solo 343 — 351px
+   vacíos a su derecha, porque la rejilla seguía siendo de dos columnas desde
+   que se retiró el peeling.
+
+   Se pasa a dos columnas de verdad: el mensaje a la izquierda con sitio para
+   respirar, el regalo a la derecha. Además de aprovechar el ancho, baja el
+   alto del bloque — y ese alto se lo queda el cronograma de la 04, que iba tan
+   comprimido que el cuerpo bajaba a 9,5px. */
+.gifts{
+  display:grid;
+  grid-template-columns:1fr 300px;
+  grid-template-areas:"cab cab" "mensaje regalo";
+  column-gap:22px;
+  row-gap:8px;
+  align-items:center;
+}
+.gifts .gh{ grid-area:cab; }
+.gifts .g-lede{
+  grid-area:mensaje;
+  margin:0;
+  max-width:none;
+  font-size:13.2px;
+  line-height:1.45;
+}
+.gifts .gg{ grid-area:regalo; margin:0; }
+/* Con un solo regalo la rejilla interna deja de ser de dos columnas: era lo
+   que dejaba el hueco. */
+.gifts .gg.gg-1{ grid-template-columns:1fr !important; justify-content:stretch !important; }
+.gifts .gift{ width:100%; }
+
 /* ══ CUIDADOS INMEDIATOS TRAS LA APLICACIÓN ═══════════════════════════════
    Lo que el paciente necesita para decidir su vuelo de vuelta. Estaba como
    una viñeta más del último día y se perdía; ahora es un cuadro con su propio
    peso, al cierre del cronograma. */
 .tlcare{
-  margin-top:12px;
-  padding:10px 13px 10px 14px;
-  border:1px solid rgba(18,160,136,.35);
-  border-left:3px solid var(--emerald);
-  border-radius:10px;
-  background:linear-gradient(120deg,rgba(18,160,136,.07),rgba(18,160,136,.02));
+  margin-top:14px;
+  padding:14px 18px 15px;
+  border:none;
+  border-left:4px solid var(--emerald);
+  border-radius:12px;
+  background:var(--ink2);
+  box-shadow:0 10px 26px rgba(14,42,59,.18);
   break-inside:avoid; page-break-inside:avoid;
 }
 .tlcare-h{
-  font:700 10.4px 'Pop';
-  letter-spacing:.2em;
+  font:700 11px 'Pop';
+  letter-spacing:.22em;
   text-transform:uppercase;
-  color:var(--emerald-d);
-  margin-bottom:5px;
+  color:var(--emerald-l);
+  margin-bottom:9px;
+  display:flex; align-items:center; gap:8px;
 }
-.tlcare ul{ margin:0; padding-left:14px; }
+/* Un filo esmeralda delante, igual que los títulos de sección: el mismo
+   sistema, para que no parezca un elemento traído de otra pieza. */
+.tlcare-h::before{
+  content:"";
+  width:3px; height:.9em;
+  background:var(--emerald);
+  border-radius:1px;
+}
+/* Dos columnas: las cuatro pautas se leen de un vistazo en vez de en una
+   lista larga que el ojo se salta. */
+.tlcare ul{
+  margin:0; padding:0; list-style:none;
+  display:grid; grid-template-columns:1fr 1fr;
+  column-gap:22px; row-gap:7px;
+}
 .tlcare li{
-  font:500 11.2px/1.45 'Pop';
-  color:var(--brand-ink);
-  margin-top:3px;
+  font:500 11.8px/1.42 'Pop';
+  color:rgba(255,255,255,.92);
+  position:relative;
+  padding-left:14px;
 }
-.tlcare li::marker{ color:var(--emerald); }
+.tlcare li::before{
+  content:"";
+  position:absolute; left:0; top:.52em;
+  width:5px; height:5px; border-radius:50%;
+  background:var(--emerald-l);
+}
+/* La primera pauta es la que decide el vuelo: va destacada y a todo el ancho. */
+.tlcare li:first-child{
+  grid-column:1 / -1;
+  font-weight:700;
+  font-size:12.6px;
+  color:#fff;
+}
 body.p5z1 .tlcare{ margin-top:8px; padding:7px 11px 7px 12px; }
 body.p5z1 .tlcare li{ font-size:10.4px; line-height:1.36; margin-top:2px; }
 
@@ -2169,13 +2319,16 @@ body.p5z1 .tlcare li{ font-size:10.4px; line-height:1.36; margin-top:2px; }
 /* Una hairline por día, con aire a los dos lados. Medido: a partir de aquí el
    motor ya está en su meseta de zoom, así que subir el aire de 6 a 9px no
    cuesta ni un escalón más — es separación gratis. */
+/* ⚠ AIRE MEDIDO, NO ELEGIDO A OJO (Alejo, 31-jul-2026). Con 9+9px la página
+   04 caía en compresión máxima y el cuerpo del cronograma bajaba a 9,5px: se
+   veía picado, que es lo contrario de lo que se buscaba. Con 4+4 el texto
+   sube a 10,1px (8,6 en español) y la hairline sigue separando los días.
+   Probado en la 04 con el carrito más cargado de los dos idiomas. */
 .tlrow + .tlrow{
   border-top:1px solid var(--hair);
-  padding-top:9px;
+  padding-top:4px;
 }
-.tlrow{ padding-bottom:9px; }
-body.p4-tight .tlrow + .tlrow{ padding-top:7px; }
-body.p4-tight .tlrow{ padding-bottom:7px; }
+.tlrow{ padding-bottom:4px; }
 .tlrow:last-child{ padding-bottom:0; }
 
 /* La fecha deja de ser texto suelto y pasa a ser la ETIQUETA del día: se lee
@@ -6519,8 +6672,8 @@ const COND_CATS = {
   },
   respiratory: {
     label:{en:"Respiratory & lung", es:"Respiratorias y pulmonares"},
-    t:{en:"In chronic lung disease, inflammation and fibrosis feed each other until breathing capacity is lost. Delivered intravenously, mesenchymal cells reach the lung first: there they release anti-inflammatory and anti-fibrotic factors and help modulate the immune response that drives the damage. The aim is to slow that cycle and protect the tissue that still works, which is why active disease tends to respond better than end-stage fibrosis. Responses develop over months and vary between individuals.",
-       es:"En la enfermedad pulmonar crónica, la inflamación y la fibrosis se alimentan entre sí hasta que se pierde capacidad respiratoria. Aplicadas por vía intravenosa, las células mesenquimales llegan primero al pulmón: allí liberan factores antiinflamatorios y antifibróticos y ayudan a modular la respuesta inmune que impulsa el daño. El objetivo es frenar ese ciclo y proteger el tejido que aún funciona, y por eso la enfermedad activa suele responder mejor que una fibrosis terminal. Las respuestas se desarrollan durante meses y varían entre personas."},
+    t:{en:"In chronic lung disease, inflammation and fibrosis feed each other until breathing capacity is lost. Delivered intravenously, mesenchymal cells reach the lung first: there they release anti-inflammatory and anti-fibrotic factors and help modulate the immune response that drives the damage. The aim is to slow that cycle and protect the tissue that still works, which is why active disease tends to respond better than end-stage fibrosis. Responses could develop over months and vary between individuals.",
+       es:"En la enfermedad pulmonar crónica, la inflamación y la fibrosis se alimentan entre sí hasta que se pierde capacidad respiratoria. Aplicadas por vía intravenosa, las células mesenquimales llegan primero al pulmón: allí liberan factores antiinflamatorios y antifibróticos y ayudan a modular la respuesta inmune que impulsa el daño. El objetivo es frenar ese ciclo y proteger el tejido que aún funciona, y por eso la enfermedad activa suele responder mejor que una fibrosis terminal. Las respuestas podrían desarrollarse durante meses y varían entre personas."},
     items:[
       {n:{en:"COPD / emphysema", es:"EPOC / enfisema"}},
       {n:{en:"Pulmonary fibrosis", es:"Fibrosis pulmonar"}},
@@ -7990,9 +8143,12 @@ function syncSedacion(c){
   const conLocal = !!(s.joint || s.wrist || s.sacro || s.multiJoint ||
                       s.smallJoint || s.pshot || s.face || s.hair ||
                       s.intrathecal || s.neuro);
-  /* Solo columna: sedacion profunda ya incluida en el precio, nada que ofrecer.
-     Columna + otra cosa: se ofrece por esa otra. */
-  const hayProcedimiento = conLocal;
+  /* ⚠ SI HAY COLUMNA, NO SE OFRECE SEDACIÓN (Alejo, 31-jul-2026).
+     La columna va con sedación profunda incluida, y cuando el paciente lleva
+     además una articulación se le hace TODO en la misma sesión aprovechando
+     esa sedación. Cobrarle aparte por algo que ya está sedado sería cobrar dos
+     veces lo mismo. */
+  const hayProcedimiento = conLocal && !s.back;
   box.style.display = hayProcedimiento ? "" : "none";
   if(!hayProcedimiento) return;
 
