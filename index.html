@@ -2743,13 +2743,16 @@ body.p5z1 .sedopt-p{ font-size:10.6px; line-height:1.38; }
       <!-- La anestesia local va incluida y no se cobra. Lo opcional es la
            sedación, y se explica POR QUÉ alguien la querría: el precio solo
            convence después de que el paciente se ve en el caso. -->
+      <!-- ⚠ SIN PRECIO A PROPOSITO (Mia, 31-jul-2026): aqui se anuncia que
+           PODEMOS sedar —es un diferenciador, la doctora es anestesiologa y ya
+           esta en el quirofano— y el cargo se explica en el cierre. Un numero
+           impreso lo volvia un cobro mas y encarecia la cotizacion de entrada. -->
       <div class="sedopt">
-        <div class="sedopt-i">+</div>
+        <div class="sedopt-i">✦</div>
         <div class="sedopt-b">
-          <div class="sedopt-n" contenteditable="true">Sedation, if you prefer to feel nothing at all</div>
-          <div class="sedopt-p" contenteditable="true">Local anesthesia is already included wherever your treatment calls for it. Beyond that, our own anesthesiologist can sedate you — worth considering if you are sensitive to pain, or if more than one area is being treated the same day. Ask your coordinator before you travel.</div>
+          <div class="sedopt-n" contenteditable="true">You can be sedated — by the same anesthesiologist who treats you</div>
+          <div class="sedopt-p" contenteditable="true">Local anesthesia is already included wherever your treatment calls for it. And because your procedure is performed by an anesthesiologist physician, sedation is available too — so you can go through it without feeling a thing. Worth asking your coordinator about if you are sensitive to pain, or if more than one area is treated the same day.</div>
         </div>
-        <div class="sedopt-price"><span data-usd="100">$100</span></div>
       </div>
     </div>
 
@@ -4652,6 +4655,8 @@ const T = {
   "Sedation, if you prefer to feel nothing at all":"Sedación, si prefiere no sentir absolutamente nada",
   "Local anesthesia is already included wherever your treatment calls for it. Beyond that, our own anesthesiologist can sedate you — worth considering if you are sensitive to pain, or if more than one area is being treated the same day. Ask your coordinator before you travel.":"La anestesia local ya va incluida donde su tratamiento la requiere. Más allá de eso, nuestra propia anestesióloga puede sedarlo — vale la pena considerárselo si es sensible al dolor, o si le tratan más de una zona el mismo día. Consulte a su coordinadora antes de viajar.",
   "Choosing us should feel like more than a transaction — this one is on us.":"Elegirnos debería sentirse como algo más que una transacción — esta va por nuestra cuenta.",
+  "You can be sedated — by the same anesthesiologist who treats you":"Puede recibir sedación — de la misma anestesióloga que lo atiende",
+  "Local anesthesia is already included wherever your treatment calls for it. And because your procedure is performed by an anesthesiologist physician, sedation is available too — so you can go through it without feeling a thing. Worth asking your coordinator about if you are sensitive to pain, or if more than one area is treated the same day.":"La anestesia local ya va incluida donde su tratamiento la requiere. Y como su procedimiento lo realiza una médica anestesióloga, también existe la opción de sedación — para que pueda pasar por él sin sentir nada. Vale la pena consultarlo con su coordinadora si es sensible al dolor, o si le tratan más de una zona el mismo día.",
   "Systemic stem cells — 100M by IV":"Células madre sistémicas — 100M por vía IV",
   "La Loma, a Tribute Portfolio Hotel (Marriott) — included for the full days of your treatment, single occupancy, breakfast included.":"La Loma, a Tribute Portfolio Hotel (Marriott) — incluido durante todos los días de su tratamiento, en ocupación sencilla y con desayuno.",
   "Hotel, transfers, consultations and a dedicated coordinator — all handled, all included. Our partner lab follows US FDA and EMA guidelines for producing human cells for therapeutic use.":"Hotel, traslados, consultas y un coordinador dedicado — todo gestionado, todo incluido. Nuestro laboratorio aliado sigue las guías de la FDA de EE. UU. y la EMA para la producción de células humanas de uso terapéutico.",
@@ -7770,6 +7775,10 @@ function syncSedacion(c){
   const esCO2 = /\bco2\b/i.test(texto);
   const usd = esCO2 ? 200 : 100;
 
+  /* El importe NO se imprime (decision de Mia, 31-jul-2026): la sedacion se
+     anuncia como capacidad y el cargo se explica en el cierre. El calculo se
+     conserva por si se decide volver a mostrarlo — basta reponer el
+     <span data-usd> dentro de .sedopt-price. */
   const precio = box.querySelector(".sedopt-price span");
   if(precio){
     precio.dataset.usd = String(usd);
