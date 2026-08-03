@@ -2076,6 +2076,73 @@ body.p2z5 .cmod-t::before,body.p2z6 .cmod-t::before,body.cond-tight .cmod-t::bef
 .row-side:hover{ background:rgba(18,160,136,.16); }
 .row-side:focus{ outline:none; border-color:var(--emerald-d); }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   CRONOGRAMA: CADA DÍA, UNA ESTACIÓN  (Alejo, 31-jul-2026)
+
+   Diagnóstico medido: las filas de día tenían 0px de separación entre sí —
+   solo 4px de padding— y el raíl vertical estaba aplanado a una hairline gris
+   casi invisible. Todo llegaba pegado: fecha, título y cuerpo del día
+   siguiente formaban un bloque continuo y no se veía dónde acababa un día.
+
+   ⚠ La página 04 va al límite: 21px libres y compresión máxima (p4z3 + zoom).
+   No se puede separar con aire, así que la separación se consigue con
+   recursos que no cuestan alto: una hairline por día, el raíl otra vez
+   visible, y la fecha convertida en etiqueta en vez de texto suelto. El
+   sobrecoste total es de ~6px, dentro del margen.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* El raíl vuelve a verse: es lo que convierte una lista en una línea de
+   tiempo. Se degrada hacia abajo para que el ojo siga el recorrido. */
+.tl::before{
+  background:linear-gradient(180deg,var(--emerald),rgba(18,160,136,.22)) !important;
+  width:2px !important;
+}
+
+/* Una hairline por día, con aire a los dos lados. Medido: a partir de aquí el
+   motor ya está en su meseta de zoom, así que subir el aire de 6 a 9px no
+   cuesta ni un escalón más — es separación gratis. */
+.tlrow + .tlrow{
+  border-top:1px solid var(--hair);
+  padding-top:9px;
+}
+.tlrow{ padding-bottom:9px; }
+body.p4-tight .tlrow + .tlrow{ padding-top:7px; }
+body.p4-tight .tlrow{ padding-bottom:7px; }
+.tlrow:last-child{ padding-bottom:0; }
+
+/* La fecha deja de ser texto suelto y pasa a ser la ETIQUETA del día: se lee
+   de un vistazo dónde empieza cada jornada. No ocupa más alto que el texto
+   que sustituye. */
+.tlrow .date{
+  /* inline, no inline-block: el relleno vertical de un elemento inline no
+     suma al alto de la línea, así que la etiqueta se ve sin costar página. */
+  display:inline;
+  background:rgba(18,160,136,.10);
+  color:var(--emerald-d) !important;
+  padding:1px 8px;
+  border-radius:5px;
+  letter-spacing:.14em !important;
+  box-decoration-break:clone;
+  -webkit-box-decoration-break:clone;
+}
+/* "Before arrival" y "After treatment" no son jornadas de tratamiento: van en
+   gris de estructura para que no compitan con los días reales. */
+.tlrow.soft .date{
+  background:rgba(20,55,92,.06);
+  color:var(--steel) !important;
+}
+
+/* El punto de la estación, más definido y en la paleta del raíl. */
+.tlrow .dot{
+  border-color:var(--emerald) !important;
+  box-shadow:0 0 0 3px #fff !important;
+}
+.tlrow.soft .dot{ border-color:var(--steel) !important; }
+
+/* Jerarquía dentro del día: el título manda, el cuerpo acompaña. */
+.tlrow .tt{ color:var(--brand-ink) !important; }
+.tlrow .ts{ color:var(--mut); }
+
 /* Cortesía con un solo regalo: la tarjeta no se estira a lo ancho de la hoja
    —quedaría un rectángulo vacío— sino que se centra a su tamaño. */
 .gg.gg-1{ grid-template-columns:minmax(0,340px); justify-content:center; }
@@ -2944,7 +3011,8 @@ body.p5z1 .sedopt-p{ font-size:10.6px; line-height:1.38; }
        (Mark 80M=$7,600 · Don 100M=$8,500), que son anteriores.
      · Multi big joints = precio bundle (CRM + cotización de Magaly).
      · 2 small joints = $5,500 (CRM 13-jul, coincide con hoja individual).
-     · Thumb/Toe=$1,950 y Plantar 2 pies=$5,500 (CRM > Excel, que dice
+     · Thumb/Toe=$1,950. Plantar: 1 pie=$3,850 y 2 pies=$5,300 (Alejo,
+       31-jul-2026; antes 3.500 y 5.000). (CRM > Excel, que dice
        $1,750 y $5,000 — el Excel quedó desactualizado).
      · IV 240M=$9,100 y 250M=$9,400 (CRM 13-jul, rompen la escala de
        +$300/10M pero son el dato vigente).
@@ -2977,8 +3045,8 @@ const CATALOG = {
   tendon:  { name: "Tendon or ligament application — 20M stem cells", price: 3500 },
   muscle:  { name: "Muscle application — 30M stem cells", price: 3750 },
   sacro:   { name: "Both sacroiliac joints — 20M stem cells per joint", price: 5000 },
-  plantar: { name: "Plantar fasciitis (1 foot) — 20M stem cells + 13 billion exosomes", price: 3500 },
-  plantar2:{ name: "Plantar fasciitis (both feet) — 20M stem cells + 13 billion exosomes per foot", price: 5000 },
+  plantar: { name: "Plantar fasciitis (1 foot) — 20M stem cells + 13 billion exosomes", price: 3850 },
+  plantar2:{ name: "Plantar fasciitis (both feet) — 20M stem cells + 13 billion exosomes per foot", price: 5300 },
   thumb:   { name: "Thumb or big toe — 10M stem cells", price: 1750 },
   face:    { name: "Facial Rejuvenation — 20M stem cells + Platelet Lysate", price: 2300 },
   hair:    { name: "Hair Rejuvenation — 30M stem cells + PRP · 6-month hair spray included", price: 2500 },
@@ -3647,8 +3715,8 @@ const PRODUCTS = [
   {id:"groin",cat:"Other",label:"Groin Treatment",price:3500,days:2,cells:"20M MSCs + 13B exosomes"},
   {id:"perineural",cat:"Other",label:"Perineural Treatment",price:3750,days:2,cells:"20M MSCs"},
   {id:"sacro",cat:"Other",label:"Sacro-Iliac Joints (right and left)",price:5000,days:2,cells:"20M MSCs per joint"},
-  {id:"plantar1",cat:"Other",label:"Plantar Fasciitis (1 foot)",price:3500,days:2,cells:"20M MSCs + 13B exosomes"},
-  {id:"plantar2",cat:"Other",label:"Plantar Fasciitis (2 feet)",price:5000,days:2,cells:"20M MSCs + 13B exosomes per foot"},
+  {id:"plantar1",cat:"Other",label:"Plantar Fasciitis (1 foot)",price:3850,days:2,cells:"20M MSCs + 13B exosomes"},
+  {id:"plantar2",cat:"Other",label:"Plantar Fasciitis (2 feet)",price:5300,days:2,cells:"20M MSCs + 13B exosomes per foot"},
   {id:"cervical",cat:"Other",label:"Cervical Application",price:200,days:2,cells:"application"},
   {id:"epidural",cat:"Other",label:"Epidural Application",price:200,days:2,cells:"application"},
   // ANTI-AGING
@@ -4012,6 +4080,10 @@ function comboSignals(c){
       exo: false,
       intrathecal: cats.includes("Intrathecal"),
       sacro: /sacro|sacroiliac/.test(btxt),
+      /* La fascia plantar necesita su propia señal: cae en la categoría
+         "Other" del catálogo, que también agrupa articulaciones, así que sin
+         esto se trataba como una más. */
+      plantar: /plantar|fasciitis|fascitis/.test(btxt),
       multiJoint: /\d\s*(big|small)\s*joints|combo \d/.test(btxt),
       smallJoint: cats.includes("Small Joints"),
       neuro: cats.includes("Intrathecal") || /neuro|brain/.test(btxt),
@@ -4048,6 +4120,7 @@ function comboSignals(c){
         || (currentTier==="ess" && (/iv ·|iv with|full body|systemic/.test(txt))),
     back: /spine|back/.test(txt),
     joint: /joint|knee|shoulder|hip|ankle|elbow|wrist/.test(txt),
+    plantar: /plantar|fasciitis|fascitis/.test(txt),
     wrist: /wrist/.test(txt),
     face: /facial|face/.test(txt),
     hair: /hair/.test(txt),
@@ -4274,7 +4347,17 @@ function localBlocks(s){
     B.push({tag: builtLocalLabel() || "Wrist Treatment", cls:"local", li:["With "+mm("wrist",30)+" million umbilical cord stem cells",exoLine("1ml (≈13 billion) exosomes"),APP_US]});
   // Las sacroilíacas son 20M por articulación, no los 100M del bloque genérico:
   // se dejan caer en la red de seguridad, que lee la dosis real del catálogo.
-  if(s.joint && !s.wrist && !s.sacro && !s.multiJoint)
+  /* ⚠ La fascia plantar va ANTES que la articulación y la excluye: no se
+     aplica dentro de una cavidad articular sino directamente sobre el tejido
+     inflamado. El cronograma lo decía como "Joint Treatment". */
+  if(s.plantar)
+    B.push({tag: builtLocalLabel() || "Plantar Fascia Treatment", cls:"local",
+            li:["With "+mm("plantar",20)+" million umbilical cord stem cells per foot",
+                exoLine("1ml (\u224813 billion) exosomes"),
+                "Applied directly into the plantar fascia under live ultrasound, by anesthesiologist. Not a joint injection.",
+                "Doctors recommend resting 3 days after the application, avoiding travel during that period, and bringing a companion."],
+            details:"Which foot and where along the fascia \u2014 e.g. right heel, calcaneal insertion\u2026"});
+  if(s.joint && !s.plantar && !s.wrist && !s.sacro && !s.multiJoint)
     // A built combo knows the real procedure ("Biceps Treatment"); printing the generic
     // category on a patient's schedule is a factual error.
     // 50M es la dosis de una articulación grande (30M la pequeña). El 100 que había
@@ -5065,6 +5148,9 @@ const LZMAP = {
   "Exact levels and distribution — e.g. L4-L5 and L5-S1 discs, bilateral facet joints L3-L4…":"Niveles exactos y distribución — p. ej. discos L4-L5 y L5-S1, facetas bilaterales L3-L4…",
   "Level of the puncture and confirmed dose — e.g. intrathecal L3-L4, after neurology review…":"Nivel de la punción y dosis confirmada — p. ej. intratecal L3-L4, tras la valoración de neurología…",
   "Exact site treated and how the dose is distributed…":"Sitio exacto tratado y cómo se reparte la dosis…",
+  "Plantar Fascia Treatment":"Tratamiento de fascia plantar",
+  "Applied directly into the plantar fascia under live ultrasound, by anesthesiologist. Not a joint injection.":"Aplicaci\u00f3n directa sobre la fascia plantar con gu\u00eda ecogr\u00e1fica en vivo, por anestesi\u00f3loga. No es una infiltraci\u00f3n articular.",
+  "Which foot and where along the fascia \u2014 e.g. right heel, calcaneal insertion\u2026":"Qu\u00e9 pie y en qu\u00e9 punto de la fascia \u2014 p. ej. tal\u00f3n derecho, inserci\u00f3n calc\u00e1nea\u2026",
   "Hotel, transfers, coordinator & follow-up":"Hotel, traslados, coordinador y seguimiento",
   "Bilingual coordinator & follow-up":"Coordinador bilingüe y seguimiento",
   "Hotel & transfers — on request":"Hotel y traslados — a solicitud",
@@ -6202,8 +6288,8 @@ function showMRIFields(p, usedAI){
 const COND_CATS = {
   joint: {
     label:{en:"Joints, cartilage & tendons", es:"Articulaciones, cartílago y tendones"},
-    t:{en:"Worn cartilage and inflamed tendons stop healing on their own because the joint loses the signals that drive repair. Placed directly into the joint under live imaging, mesenchymal cells restore those signals: they release growth factors and exosomes that calm the inflammation, protect the cartilage still there and support the repair of partial tears. They work where native tissue remains — which is why stages 1 to 3 respond and a bone-on-bone joint does not. Improvement builds over 4 to 6 months.",
-       es:"El cartílago desgastado y los tendones inflamados dejan de sanar solos porque la articulación pierde las señales que ordenan la reparación. Aplicadas directamente en la articulación bajo imagen en vivo, las células mesenquimales devuelven esas señales: liberan factores de crecimiento y exosomas que calman la inflamación, protegen el cartílago que aún queda y apoyan la reparación de desgarros parciales. Actúan donde todavía hay tejido propio — por eso los grados 1 a 3 responden y una articulación hueso con hueso no. La mejoría se construye entre 4 y 6 meses."},
+    t:{en:"A shoulder, a knee, an ankle or a wrist all fail the same way: cartilage wears, a tendon or ligament inflames, and the joint stops repairing itself because it loses the signals that drive repair. Placed directly into that joint under live imaging, mesenchymal cells restore those signals — releasing growth factors and exosomes that calm the inflammation, protect the cartilage still there and support the repair of partial tears. What changes from one joint to another is the dose and the approach, not the biology. They work where your own tissue remains, which is why stages 1 to 3 respond and a bone-on-bone joint does not. Improvement builds over 4 to 6 months.",
+       es:"Un hombro, una rodilla, un tobillo o una muñeca fallan igual: el cartílago se desgasta, un tendón o un ligamento se inflama y la articulación deja de repararse porque pierde las señales que ordenan la reparación. Aplicadas directamente en esa articulación bajo imagen en vivo, las células mesenquimales devuelven esas señales — liberan factores de crecimiento y exosomas que calman la inflamación, protegen el cartílago que aún queda y apoyan la reparación de desgarros parciales. Lo que cambia de una articulación a otra es la dosis y la vía, no la biología. Actúan donde todavía hay tejido propio, por eso los grados 1 a 3 responden y una articulación hueso con hueso no. La mejoría se construye entre 4 y 6 meses."},
     items:[
       {n:{en:"Knee osteoarthritis (stage 1–3)", es:"Artrosis de rodilla (grado 1–3)"}},
       {n:{en:"Hip osteoarthritis (stage 1–3)", es:"Artrosis de cadera (grado 1–3)"}},
@@ -6222,6 +6308,20 @@ const COND_CATS = {
       {n:{en:"Avascular necrosis (early stage)", es:"Necrosis avascular (estadio temprano)"}},
       {n:{en:"Chondromalacia patellae", es:"Condromalacia rotuliana"}},
       {n:{en:"Joint inflammation & chronic pain", es:"Inflamación articular y dolor crónico"}}
+    ]
+  },
+  plantar: {
+    label:{en:"Plantar fascia & heel", es:"Fascia plantar y tal\u00f3n"},
+    t:{en:"The plantar fascia is the thick band of tissue that runs from the heel to the toes. When it inflames it stops repairing itself, and the pain is unmistakable: a stabbing heel on the first steps of the morning, worse after long hours standing, easing with relative rest, ice and stretching. This is not a joint and there is no cartilage involved \u2014 so the cells are not placed into a joint cavity but applied directly into the damaged tissue, under live ultrasound. There they release growth factors and exosomes that calm the inflammation and support the repair of the fascia itself. Improvement builds over 4 to 6 months.",
+       es:"La fascia plantar es la banda de tejido grueso que va del tal\u00f3n a los dedos. Cuando se inflama deja de repararse sola, y el dolor es inconfundible: punzante en el tal\u00f3n al dar los primeros pasos de la ma\u00f1ana, peor tras estar de pie mucho tiempo, y se alivia con reposo relativo, hielo y estiramientos. No es una articulaci\u00f3n ni hay cart\u00edlago de por medio \u2014 por eso las c\u00e9lulas no se aplican dentro de una cavidad articular sino directamente sobre el tejido da\u00f1ado, con gu\u00eda ecogr\u00e1fica en vivo. All\u00ed liberan factores de crecimiento y exosomas que calman la inflamaci\u00f3n y apoyan la reparaci\u00f3n de la propia fascia. La mejor\u00eda se construye entre 4 y 6 meses."},
+    items:[
+      {n:{en:"Plantar fasciitis", es:"Fascitis plantar"}},
+      {n:{en:"Chronic heel pain", es:"Dolor cr\u00f3nico de tal\u00f3n"}},
+      {n:{en:"Plantar fasciitis with heel spur", es:"Fascitis plantar con espol\u00f3n calc\u00e1neo"}},
+      {n:{en:"Plantar fasciitis in both feet", es:"Fascitis plantar en ambos pies"}},
+      {n:{en:"Pain after long hours standing", es:"Dolor tras muchas horas de pie"}},
+      {n:{en:"Fasciitis that keeps coming back", es:"Fascitis que siempre vuelve"}},
+      {n:{en:"Achilles tendon pain", es:"Dolor del tend\u00f3n de Aquiles"}}
     ]
   },
   spine: {
@@ -6449,7 +6549,10 @@ function groupFromText(s){
   if(has("diab","insulin","prediabet","metabolic syndrome","hba1c")) return "diabetes";
   if(has("intrathecal","neuro","brain","parkinson","alzheimer","multiple sclerosis"," ms ","stroke","neuropath","autism","cerebral pals","als","dementia","cognit")) return "neuro";
   if(has("back","spine","spinal","disc","lumbar","cervical","hernia","sciatic","stenosis")) return "spine";
-  if(has("knee","hip","shoulder","joint","cartilage","tendon","ligament","hand","ankle","elbow","wrist","rotator","arthrosis","osteoarthritis","plantar","sacro","thumb","toe","muscle","groin","perineural")) return "joint";
+  /* La fascia plantar va ANTES que joint y fuera de su lista: no es una
+     articulaci\u00f3n, y estaba cayendo en el texto de hombro/rodilla/cart\u00edlago. */
+  if(has("plantar","fascii","fascitis","heel","tal\u00f3n","talon","calc\u00e1neo","calcaneo")) return "plantar";
+  if(has("knee","hip","shoulder","joint","cartilage","tendon","ligament","hand","ankle","elbow","wrist","rotator","arthrosis","osteoarthritis","sacro","thumb","toe","muscle","groin","perineural")) return "joint";
   if(has("hair","scalp","capil","alopecia","follicle")) return "hair";
   if(has("face","facial","skin","aesth","p-shot","pshot")) { return has("p-shot","pshot","erectile","sexual","penil") ? "sexual" : "face"; }
   if(has("sexual","erectile","penil","p shot","v-shot","vshot","peyronie")) return "sexual";
@@ -6599,7 +6702,7 @@ function condicionesPorTratamiento(c){
 
 /* Orden clínico de los módulos: primero la lesión por la que consulta, después
    lo sistémico, y la estética al final. */
-const CAT_ORDER = ["spine","joint","neuro","autoimmune","diabetes","respiratory",
+const CAT_ORDER = ["spine","joint","plantar","neuro","autoimmune","diabetes","respiratory",
                    "digestive","sexual","face","hair","longevity"];
 
 /* Selección del asesor, por categoría: {joint:2, spine:0}. Sobrevive a los
