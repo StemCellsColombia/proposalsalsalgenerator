@@ -5716,7 +5716,7 @@ function applyCurrency(){
      el plan decía "$27.852.000 COP" y al lado un add-on decía "$2,500" — que un
      paciente colombiano lee como 2.500 pesos, no 2.500 dólares. Ahora el valor
      base en USD vive en data-usd y se reformatea con la moneda activa. */
-  document.querySelectorAll(".optchip .op[data-usd]").forEach(e=>{
+  document.querySelectorAll(".optchip .op[data-usd], .sedopt-price span[data-usd]").forEach(e=>{
     e.textContent = money(parseInt(e.dataset.usd,10)||0);
   });
 }
@@ -6211,6 +6211,13 @@ const COND_CATS = {
       {n:{en:"Hand & small-joint arthritis", es:"Artrosis de mano y articulaciones pequeñas"}},
       {n:{en:"Plantar fasciitis", es:"Fascitis plantar"}},
       {n:{en:"Sacroiliac joint pain", es:"Dolor de articulación sacroilíaca"}},
+            {n:{en:"Meniscus tear (partial)", es:"Rotura de menisco (parcial)"}},
+      {n:{en:"Labral tear — hip or shoulder", es:"Lesión del labrum — cadera u hombro"}},
+      {n:{en:"Frozen shoulder (adhesive capsulitis)", es:"Hombro congelado (capsulitis adhesiva)"}},
+      {n:{en:"Tennis or golfer's elbow", es:"Codo de tenista o de golfista"}},
+      {n:{en:"Chronic bursitis", es:"Bursitis crónica"}},
+      {n:{en:"Avascular necrosis (early stage)", es:"Necrosis avascular (estadio temprano)"}},
+      {n:{en:"Chondromalacia patellae", es:"Condromalacia rotuliana"}},
       {n:{en:"Joint inflammation & chronic pain", es:"Inflamación articular y dolor crónico"}}
     ]
   },
@@ -6227,6 +6234,11 @@ const COND_CATS = {
       {n:{en:"Cervical (neck) disc disease", es:"Enfermedad discal cervical (cuello)"}},
       {n:{en:"Spinal stenosis", es:"Estenosis del canal lumbar"}},
       {n:{en:"Spinal cord injury", es:"Lesión de médula espinal"}},
+            {n:{en:"Spondylolisthesis", es:"Espondilolistesis"}},
+      {n:{en:"Annular tear", es:"Desgarro del anillo fibroso"}},
+      {n:{en:"Facet joint syndrome", es:"Síndrome facetario"}},
+      {n:{en:"Chronic neck pain / whiplash", es:"Dolor cervical crónico / latigazo"}},
+      {n:{en:"Pain related to scoliosis", es:"Dolor asociado a escoliosis"}},
       {n:{en:"Persistent pain after back surgery", es:"Dolor persistente tras cirugía de columna"}}
     ]
   },
@@ -6242,6 +6254,12 @@ const COND_CATS = {
       {n:{en:"Recovery after illness", es:"Recuperación después de una enfermedad"}},
       {n:{en:"Athletic recovery & performance", es:"Recuperación y rendimiento deportivo"}},
       {n:{en:"Sleep quality & stress resilience", es:"Calidad del sueño y resistencia al estrés"}},
+            {n:{en:"Hormonal decline (menopause / andropause)", es:"Declive hormonal (menopausia / andropausia)"}},
+      {n:{en:"Cardiovascular & circulation support", es:"Apoyo cardiovascular y circulatorio"}},
+      {n:{en:"Mental clarity & focus", es:"Claridad mental y concentración"}},
+      {n:{en:"Skin, hair & nail quality", es:"Calidad de piel, cabello y uñas"}},
+      {n:{en:"Post-viral fatigue", es:"Fatiga posviral"}},
+      {n:{en:"Bone density & joint ageing", es:"Densidad ósea y envejecimiento articular"}},
       {n:{en:"Biohacking & prevention", es:"Biohacking y prevención"}}
     ]
   },
@@ -6255,6 +6273,11 @@ const COND_CATS = {
       {n:{en:"Metabolic syndrome", es:"Síndrome metabólico"}},
       {n:{en:"Diabetic neuropathy", es:"Neuropatía diabética"}},
       {n:{en:"Slow-healing diabetic wounds", es:"Heridas diabéticas de lenta cicatrización"}},
+            {n:{en:"Type 1 diabetes", es:"Diabetes tipo 1"}},
+      {n:{en:"Diabetic foot ulcer", es:"Úlcera de pie diabético"}},
+      {n:{en:"Diabetic retinopathy", es:"Retinopatía diabética"}},
+      {n:{en:"Early diabetic kidney disease", es:"Nefropatía diabética temprana"}},
+      {n:{en:"Fatty liver from metabolic syndrome", es:"Hígado graso por síndrome metabólico"}},
       {n:{en:"Obesity & metabolic inflammation", es:"Obesidad e inflamación metabólica"}}
     ]
   },
@@ -6271,6 +6294,12 @@ const COND_CATS = {
       {n:{en:"Traumatic brain injury", es:"Trauma craneoencefálico"}},
       {n:{en:"ALS / motor neuron disease", es:"ELA / enfermedad de motoneurona"}},
       {n:{en:"Autism spectrum", es:"Espectro autista"}},
+            {n:{en:"Refractory epilepsy", es:"Epilepsia refractaria"}},
+      {n:{en:"Chronic migraine", es:"Migraña crónica"}},
+      {n:{en:"Neuropathic pain", es:"Dolor neuropático"}},
+      {n:{en:"Post-concussion syndrome", es:"Síndrome posconmocional"}},
+      {n:{en:"Huntington's disease", es:"Enfermedad de Huntington"}},
+      {n:{en:"Vascular dementia", es:"Demencia vascular"}},
       {n:{en:"Cerebral palsy", es:"Parálisis cerebral"}}
     ]
   },
@@ -6284,6 +6313,10 @@ const COND_CATS = {
       {n:{en:"Long COVID", es:"COVID prolongado"}},
       {n:{en:"Chronic bronchitis", es:"Bronquitis crónica"}},
       {n:{en:"Severe or refractory asthma", es:"Asma severa o refractaria"}},
+            {n:{en:"Pulmonary hypertension", es:"Hipertensión pulmonar"}},
+      {n:{en:"Bronchiectasis", es:"Bronquiectasias"}},
+      {n:{en:"Interstitial lung disease", es:"Enfermedad pulmonar intersticial"}},
+      {n:{en:"Smoking-related lung damage", es:"Daño pulmonar por tabaquismo"}},
       {n:{en:"Lung damage after infection", es:"Daño pulmonar tras una infección"}}
     ]
   },
@@ -6297,6 +6330,12 @@ const COND_CATS = {
       {n:{en:"Fine lines & wrinkles", es:"Líneas finas y arrugas"}},
       {n:{en:"Acne scarring", es:"Cicatrices de acné"}},
       {n:{en:"Sun damage & pigmentation", es:"Daño solar y pigmentación"}},
+            {n:{en:"Rosacea & facial redness", es:"Rosácea y enrojecimiento facial"}},
+      {n:{en:"Melasma", es:"Melasma"}},
+      {n:{en:"Under-eye hollows & dark circles", es:"Ojeras y hundimiento periocular"}},
+      {n:{en:"Neck & décolleté ageing", es:"Envejecimiento de cuello y escote"}},
+      {n:{en:"Surgical or traumatic scars", es:"Cicatrices quirúrgicas o traumáticas"}},
+      {n:{en:"Enlarged pores & oily skin", es:"Poros dilatados y piel grasa"}},
       {n:{en:"Recovery after aesthetic procedures", es:"Recuperación tras procedimientos estéticos"}}
     ]
   },
@@ -6310,6 +6349,10 @@ const COND_CATS = {
       {n:{en:"Androgenetic alopecia", es:"Alopecia androgenética"}},
       {n:{en:"Follicle & density support", es:"Apoyo al folículo y la densidad"}},
       {n:{en:"Support after a hair transplant", es:"Apoyo después de un trasplante capilar"}},
+            {n:{en:"Alopecia areata", es:"Alopecia areata"}},
+      {n:{en:"Scalp inflammation / seborrheic dermatitis", es:"Inflamación del cuero cabelludo / dermatitis seborreica"}},
+      {n:{en:"Post-partum hair loss", es:"Caída de cabello posparto"}},
+      {n:{en:"Hair loss after chemotherapy", es:"Caída de cabello tras quimioterapia"}},
       {n:{en:"Telogen effluvium (sudden shedding)", es:"Efluvio telógeno (caída súbita)"}}
     ]
   },
@@ -6323,6 +6366,10 @@ const COND_CATS = {
       {n:{en:"Tissue quality & sensitivity", es:"Calidad del tejido y sensibilidad"}},
       {n:{en:"Peyronie's disease", es:"Enfermedad de Peyronie"}},
       {n:{en:"Recovery after prostate surgery", es:"Recuperación tras cirugía de próstata"}},
+            {n:{en:"Low libido", es:"Deseo sexual disminuido"}},
+      {n:{en:"Vaginal dryness & atrophy", es:"Sequedad y atrofia vaginal"}},
+      {n:{en:"Post-menopausal intimate health", es:"Salud íntima posmenopáusica"}},
+      {n:{en:"Chronic pelvic pain", es:"Dolor pélvico crónico"}},
       {n:{en:"Female intimate wellness", es:"Bienestar íntimo femenino"}}
     ]
   },
@@ -6337,6 +6384,10 @@ const COND_CATS = {
       {n:{en:"Irritable bowel syndrome (IBS)", es:"Síndrome de intestino irritable (SII)"}},
       {n:{en:"Intestinal permeability (leaky gut)", es:"Permeabilidad intestinal (intestino permeable)"}},
       {n:{en:"Chronic gastritis", es:"Gastritis crónica"}},
+            {n:{en:"Celiac disease", es:"Enfermedad celíaca"}},
+      {n:{en:"Diverticular disease", es:"Enfermedad diverticular"}},
+      {n:{en:"Chronic pancreatitis", es:"Pancreatitis crónica"}},
+      {n:{en:"Compensated liver cirrhosis", es:"Cirrosis hepática compensada"}},
       {n:{en:"Fatty liver / chronic liver disease", es:"Hígado graso / enfermedad hepática crónica"}}
     ]
   },
@@ -6352,6 +6403,11 @@ const COND_CATS = {
       {n:{en:"Hashimoto's thyroiditis", es:"Tiroiditis de Hashimoto"}},
       {n:{en:"Ankylosing spondylitis", es:"Espondilitis anquilosante"}},
       {n:{en:"Scleroderma", es:"Esclerodermia"}},
+            {n:{en:"Vitiligo", es:"Vitíligo"}},
+      {n:{en:"Graves' disease", es:"Enfermedad de Graves"}},
+      {n:{en:"Myasthenia gravis", es:"Miastenia gravis"}},
+      {n:{en:"Mixed connective tissue disease", es:"Enfermedad mixta del tejido conectivo"}},
+      {n:{en:"Chronic urticaria", es:"Urticaria crónica"}},
       {n:{en:"Fibromyalgia", es:"Fibromialgia"}}
     ]
   }
@@ -7692,10 +7748,33 @@ function syncSedacion(c){
      columna, muñeca, sacroilíacas, P-Shot, estética o intratecal. Un IV
      sistémico no entra. La red de seguridad (mano, tendón, plantar, ingle…)
      llega por s.joint o por el fallback de localBlocks. */
-  const hayProcedimiento = !!(s.back || s.joint || s.wrist || s.sacro ||
-                              s.multiJoint || s.smallJoint || s.pshot ||
-                              s.face || s.hair || s.intrathecal || s.neuro);
+  /* Procedimientos que van con anestesia local y para los que la sedacion es
+     una eleccion que se cobra aparte. La COLUMNA queda fuera a proposito: ya
+     la lleva incluida. */
+  const conLocal = !!(s.joint || s.wrist || s.sacro || s.multiJoint ||
+                      s.smallJoint || s.pshot || s.face || s.hair ||
+                      s.intrathecal || s.neuro);
+  /* Solo columna: sedacion profunda ya incluida en el precio, nada que ofrecer.
+     Columna + otra cosa: se ofrece por esa otra. */
+  const hayProcedimiento = conLocal;
   box.style.display = hayProcedimiento ? "" : "none";
+  if(!hayProcedimiento) return;
+
+  /* El laser CO2 duele mas y pide sedacion mas profunda: US$200 en vez de los
+     US$100 de una articulacion. Se detecta por el producto del carrito o por
+     la etiqueta del preset. */
+  const bc = window.builtCombo;
+  const texto = (bc && bc.items && bc.items.length)
+    ? bc.items.map(x=>(x.id||"")+" "+(x.label||"")).join(" ")
+    : ((c && c.label) || "");
+  const esCO2 = /\bco2\b/i.test(texto);
+  const usd = esCO2 ? 200 : 100;
+
+  const precio = box.querySelector(".sedopt-price span");
+  if(precio){
+    precio.dataset.usd = String(usd);
+    precio.textContent = (typeof money==="function") ? money(usd) : ("$"+usd);
+  }
 }
 function renderIncluded(c){
   const box = document.getElementById("inclList");
