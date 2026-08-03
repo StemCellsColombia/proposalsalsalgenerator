@@ -7891,11 +7891,23 @@ function includedFor(c){
   if(s.respiratory)        L.push("Online consultations with the internal medicine doctor");
   if(aesth)                L.push("2 online consultations with the aesthetic doctor");
   if(s.pshot)              L.push("2 online consultations with the urologist");
-  /* Longevidad pura = 2 consultas. Con una condición de fondo (diabetes,
-     autoinmune, respiratoria, digestiva) el seguimiento es mayor: 3. */
+  /* ⚠ MANDA LA CONDICIÓN ELEGIDA, NO EL TRATAMIENTO.
+     2 consultas solo en longevidad/bienestar (una previa y otra a los 3
+     meses). Con CUALQUIER condición de fondo son 3. Se lee la familia de
+     condición que el asesor seleccionó en el panel, porque es ahí donde se
+     decide: sobre un mismo IV puede elegir "bienestar general" o
+     "fibromialgia", y el número de consultas cambia. */
   if(s.iv && !s.neuro){
-    const conCondicion = !!(s.diabetes || s.autoimmune || s.respiratory || s.digestive);
-    L.push((conCondicion ? "3" : "2") + " online consultations with the functional medicine doctor");
+    let soloBienestar = true;
+    try{
+      const cats = (typeof catsEnCotizacion === "function") ? (catsEnCotizacion(c) || []) : [];
+      const sistemicas = cats.filter(e =>
+        typeof FAMILIAS_SISTEMICAS !== "undefined" && FAMILIAS_SISTEMICAS.indexOf(e.group) !== -1);
+      /* Si no hay ninguna familia sistémica identificada se asume bienestar,
+         que es el caso por defecto de un IV. */
+      soloBienestar = sistemicas.every(e => e.group === "longevity");
+    }catch(e){ /* ante la duda, no prometer de menos */ soloBienestar = false; }
+    L.push((soloBienestar ? "2" : "3") + " online consultations with the functional medicine doctor");
   }
 
   if(local)                L.push("Operating room");
