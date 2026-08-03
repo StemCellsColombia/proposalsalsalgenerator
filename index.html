@@ -6547,6 +6547,15 @@ const CAT_ORDER = ["spine","joint","neuro","autoimmune","diabetes","respiratory"
    repintados; si no eligió nada manda el índice que dedujo bestPresetIndex. */
 let condPick = {};
 
+/* Familias sistemicas: las que puede cubrir un mismo IV. El asesor elige cual
+   aplica al paciente; el resto de grupos (rodilla, columna, rostro...) vienen
+   determinados por el tratamiento y no se reasignan. */
+const FAMILIAS_SISTEMICAS = ["longevity","diabetes","neuro","respiratory","digestive","autoimmune"];
+
+/* Reasignacion de familia hecha por el asesor: {longevity:"diabetes"}.
+   Se aplica en catsEnCotizacion(), de donde leen el panel Y los modulos. */
+let condSwap = {};
+
 /* Categorías presentes, sin repetir. `n` suma cuántos tratamientos de esa
    categoría lleva el carrito (dos rodillas y un hombro = joint con n=3). */
 function catsEnCotizacion(c){
@@ -6555,7 +6564,16 @@ function catsEnCotizacion(c){
     if(vistos.has(e.group)){ vistos.get(e.group).n += (e.n || 1); return; }
     vistos.set(e.group, {group:e.group, idx:e.idx, n:(e.n || 1), etiqueta:e.etiqueta});
   });
-  const out = [...vistos.values()].filter(e => COND_CATS[e.group]);
+  let out = [...vistos.values()].filter(e => COND_CATS[e.group]);
+  /* Reasignacion del asesor: un IV detectado como "longevity" puede pasar a
+     "diabetes" y entonces el modulo impreso habla de diabetes. Se conserva la
+     etiqueta original del tratamiento para no perder de que producto salio. */
+  out = out.map(e=>{
+    const destino = condSwap[e.group];
+    if(!destino || destino === e.group || !COND_CATS[destino]) return e;
+    return { group:destino, idx:(condPick[destino] != null ? condPick[destino] : 0),
+             n:e.n, etiqueta:e.etiqueta, origen:e.group };
+  });
   out.sort((a,b)=> CAT_ORDER.indexOf(a.group) - CAT_ORDER.indexOf(b.group));
   return out;
 }
@@ -6623,6 +6641,18 @@ function poblarSelectoresCond(cats){
 }
 
 /* Handler del panel: fija la subcondición de UNA categoría y repinta. */
+/* Cambia la FAMILIA de una condicion sistemica (y de paso su item).
+   `orig` es el grupo con el que se detecto; `valor` viene como "grupo|indice". */
+function setCondCat(orig, valor){
+  const partes = String(valor||"").split("|");
+  const grupo = partes[0], idx = parseInt(partes[1]) || 0;
+  if(!COND_CATS[grupo]) return;
+  condSwap[orig] = grupo;
+  condPick[grupo] = idx;
+  renderCondModules(typeof currentCombo!=="undefined" ? currentCombo : null);
+  if(typeof cCond==="function") cCond();
+  if(typeof fitAll==="function") fitAll();
+}
 function setCondPick(cat, i){
   condPick[cat] = parseInt(i) || 0;
   renderCondModules(typeof currentCombo!=="undefined" ? currentCombo : null);
@@ -9158,9 +9188,35 @@ function cCond(){
   box.innerHTML = cats.map(e=>{
     const G = COND_CATS[e.group]; if(!G) return "";
     const sel = condIdxDe(e);
+    const n = e.n>1 ? ' <small style="opacity:.6">\u00d7'+e.n+'</small>' : '';
+    const origen = e.origen || e.group;
+
+    /* \u26a0 UN IV PUEDE SER DE CUALQUIER FAMILIA SIST\u00c9MICA (31-jul-2026).
+       El mismo "IV \u2014 100M" sirve para longevidad, diabetes, autoinmune,
+       respiratorio, digestivo o neurodegenerativo, pero el motor lo detecta
+       siempre como longevidad y el desplegable solo ofrec\u00eda esa lista: un
+       paciente diab\u00e9tico se llevaba "bienestar general y longevidad".
+       Para estas familias el desplegable cruza TODAS, agrupadas, para que el
+       asesor elija la condici\u00f3n real de una sola vez. En lo dem\u00e1s \u2014rodilla,
+       columna, rostro\u2014 la familia la manda el tratamiento y no se toca. */
+    if(FAMILIAS_SISTEMICAS.indexOf(e.group) !== -1){
+      const grupos = FAMILIAS_SISTEMICAS.map(g=>{
+        const F = COND_CATS[g]; if(!F) return "";
+        const items = F.items.map((it,i)=>{
+          const v = g+'|'+i;
+          const activo = (g===e.group && i===sel);
+          return '<option value="'+v+'"'+(activo?' selected':'')+'>'+
+                 cEsc((it.n&&it.n[LANG])||"")+'</option>';
+        }).join("");
+        return '<optgroup label="'+cEsc(F.label[LANG]||"")+'">'+items+'</optgroup>';
+      }).join("");
+      return '<div class="fld"><label>'+cEsc(G.label[LANG]||"")+n+
+        ' <small style="opacity:.6">\u00b7 '+cEsc(e.etiqueta||"")+'</small></label>'+
+        '<select onchange="setCondCat(\''+origen+'\', this.value); cTouch();">'+grupos+'</select></div>';
+    }
+
     const opts = G.items.map((it,i)=>
       '<option value="'+i+'"'+(i===sel?' selected':'')+'>'+cEsc((it.n&&it.n[LANG])||"")+'</option>').join("");
-    const n = e.n>1 ? ' <small style="opacity:.6">×'+e.n+'</small>' : '';
     return '<div class="fld"><label>'+cEsc(G.label[LANG]||"")+n+'</label>'+
       '<select onchange="setCondPick(\''+e.group+'\', this.value); cTouch();">'+opts+'</select></div>';
   }).join("");
