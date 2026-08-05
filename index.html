@@ -4290,6 +4290,30 @@ let currentCombo = COMBOS[0];
 let currentTier = "com";
 let withHotel = true;
 
+/* Condiciones que "Your Condition" está mostrando AHORA MISMO para el combo
+   activo — la misma fuente que pinta los módulos impresos (catsEnCotizacion),
+   así el doctor de la consulta SIEMPRE coincide con lo que el paciente lee. */
+function condicionesActivas(){
+  try{
+    const combo = (typeof currentCombo!=="undefined") ? currentCombo : null;
+    return (typeof catsEnCotizacion==="function") ? (catsEnCotizacion(combo)||[]) : [];
+  }catch(e){ return []; }
+}
+function hayFamiliaCondicion(grupo){
+  return condicionesActivas().some(e=>e.group===grupo);
+}
+/* Artritis reumatoide es UN ítem dentro de la familia "autoimmune", no toda la
+   familia — hay que mirar cuál de sus condiciones está elegida, comparando por
+   NOMBRE (no por índice, que se corre si mañana se añaden más condiciones). */
+function condicionActualEsRA(){
+  try{
+    const e = condicionesActivas().find(x=>x.group==="autoimmune");
+    if(!e) return false;
+    const G = (typeof COND_CATS!=="undefined") ? COND_CATS.autoimmune : null;
+    const it = G && G.items[e.idx];
+    return !!(it && it.n && it.n.en === "Rheumatoid arthritis");
+  }catch(e){ return false; }
+}
 function comboSignals(c){
   // BUILT combo: signals come from the real cart, not the preset.
   // Fall back to the LIVE cart (comboItems) when the combo hasn't been
@@ -4325,7 +4349,13 @@ function comboSignals(c){
       multiJoint: /\d\s*(big|small)\s*joints|combo \d/.test(btxt),
       smallJoint: cats.includes("Small Joints"),
       neuro: cats.includes("Intrathecal") || /neuro|brain/.test(btxt),
-      autoimmune: false, respiratory: false, diabetes: false,
+      /* ⚠ Antes fijos en false: un IV armado a mano nunca encendía estas
+         señales sin importar qué condición se eligiera en el panel. Ahora
+         reaccionan a "Your Condition" (ver condicionesActivas() arriba). */
+      autoimmune: hayFamiliaCondicion("autoimmune"),
+      rheumatoid: condicionActualEsRA(),
+      respiratory: hayFamiliaCondicion("respiratory"),
+      diabetes: hayFamiliaCondicion("diabetes"),
       /* ⚠ Antes era `lite:false` fijo, así que la rama de protocolo EXPRÉS de un
          solo día no se activaba nunca desde el carrito: un pulgar imprimía 2
          días (preparación + aplicación) cuando pricing.xlsx dice "Thumb or big
@@ -4372,93 +4402,206 @@ function comboSignals(c){
     multiJoint: /\d\s*(big|small)\s*joints/.test(txt),
     smallJoint: /small joint|ankle|elbow|wrist/.test(txt),
     neuro: /neuro|brain|intrathecal/.test(c.id||""),
-    autoimmune: /autoimmune|rheumatoid/.test(c.id||""),
+    // También reacciona si el asesor cambió "Your Condition" a mano sobre un
+    // preset genérico (ej. cargó "IV Treatment" y eligió "Rheumatoid
+    // arthritis"): no solo cuando el PRESET ya se llama así.
+    autoimmune: /autoimmune|rheumatoid/.test(c.id||"") || hayFamiliaCondicion("autoimmune"),
     /* Artritis reumatoide tiene SU PROPIO panel de laboratorio (no el
        genérico de autoimmune): factor reumatoide, anti-CCP, VSG, PCR,
-       anti-RA33, ANA y radiografías. Señal aparte, por id exacto. */
-    rheumatoid: c.id==="rheumatoid",
+       anti-RA33, ANA y radiografías. Señal aparte, por id exacto o por
+       condición elegida. */
+    rheumatoid: c.id==="rheumatoid" || condicionActualEsRA(),
     /* Hígado tenía la MISMA señal que respiratorio: heredaba pruebas de
        función pulmonar y hasta exosomas NEBULIZADOS (vía inhalada) en un
        paciente hepático. Señal propia. (Alejo, 31-jul-2026) */
-    respiratory: /respiratory/.test(c.id||""),
+    respiratory: /respiratory/.test(c.id||"") || hayFamiliaCondicion("respiratory"),
     liver: /liver/.test(c.id||""),
-    diabetes: /diabetes/.test(c.id||""),
+    diabetes: /diabetes/.test(c.id||"") || hayFamiliaCondicion("diabetes"),
     lite: c.lite
   };
 }
 
 const CBC = "recent Complete Blood Count (CBC)";
+
+function hasHealingPower(){
+  const bc = (typeof comboItems !== "undefined" && comboItems && comboItems.length) ? comboItems :
+             (typeof window.builtCombo !== "undefined" && window.builtCombo && window.builtCombo.items) ? window.builtCombo.items : [];
+  return bc.some(p => p.id === "exohealing" || p.label?.includes("Healing Power"));
+}
+
+function tripleExoIfHealing(base){
+  if(!hasHealingPower()) return base;
+  // 13B → 39B, 52B → 156B, 91B → 273B, 100B → 300B, etc.
+  return Math.round(base * 3);
+}
+
+function advExoDose(){
+  return tripleExoIfHealing(TIER_EXO.adv);
+}
+
+function comExoDose(){
+  return tripleExoIfHealing(TIER_EXO.com);
+}
+
+function comMscExoDose(){
+  return tripleExoIfHealing(TIER_EXO.comMsc);
+}
+
+/* Exámenes específicos por condición. Patrón: condición → lista de exámenes. */
+const SPEC_LABS = {
+  rheumatoid: [
+    "rheumatoid factor",
+    "anti-CCP antibody",
+    "ESR (erythrocyte sedimentation rate)",
+    "CRP (C-reactive protein)",
+    "anti-RA33 assay",
+    "ANA (antinuclear antibody)",
+    "radiographs of the affected joints"
+  ],
+  autoimmune: [
+    "TSH",
+    "free T4",
+    "free T3 if symptoms inconsistent with TSH/FT4",
+    "anti-TPO antibodies",
+    "anti-thyroglobulin antibodies",
+    "lipid profile",
+    "CBC",
+    "metabolic panel",
+    "vitamin D"
+  ],
+  respiratory: [
+    "CBC",
+    "metabolic panel",
+    "CT or MRI of the lungs",
+    "alpha-1 antitrypsin",
+    "CRP",
+    "pulmonary function tests"
+  ],
+  liver: [
+    "AST",
+    "ALT",
+    "alkaline phosphatase",
+    "GGT",
+    "total and direct bilirubin",
+    "albumin",
+    "INR/PT",
+    "CBC with platelets",
+    "creatinine",
+    "electrolytes (Na, K)",
+    "hepatitis B and C panel",
+    "alpha-fetoprotein (AFP)",
+    "ferritin"
+  ],
+  diabetes: [
+    "HbA1c",
+    "fasting glucose",
+    "lipid panel (total cholesterol, LDL, HDL, triglycerides)",
+    "creatinine and eGFR",
+    "metabolic panel / electrolytes",
+    "AST, ALT"
+  ],
+  neuro: [
+    "CBC",
+    "vitamin B12",
+    "serum folate",
+    "serology (HIV, HBsAg, hepatitis C, syphilis)",
+    "TSH and free T4",
+    "fasting glucose and HbA1c",
+    "ferritin",
+    "creatinine",
+    "AST/ALT/alkaline phosphatase/total bilirubin",
+    "vitamin D (25-OH)",
+    "gadolinium-enhanced brain MRI"
+  ],
+  pshot: [
+    "CBC",
+    "PSA (prostate-specific antigen)",
+    "liver enzymes / PT/aPTT",
+    "adrenal hormone levels",
+    "complete metabolic panel",
+    "HbA1c"
+  ],
+  aesthetic: [
+    "CBC",
+    "fasting glucose",
+    "TSH",
+    "urinalysis",
+    "PSA in men over 50"
+  ],
+  sports: [
+    "CBC",
+    "recent MRI or X-ray"
+  ],
+  functional: [
+    "CBC",
+    "hormone panel",
+    "CRP or ESR",
+    "metabolic panel (glucose, creatinine, ALT/AST)",
+    "HbA1c",
+    "lipid profile",
+    "ferritin"
+  ]
+};
+
+function formatLabList(labs){
+  if(!labs || !labs.length) return "";
+  return labs.join(", ");
+}
+
 function bonusConsults(s){
   const items = [];
+
   // Deportólogo: solo cuando hay una aplicación local (columna o articulación).
-  // Antes disparaba también con s.iv, y un protocolo sistémico puro pedía
-  // deportólogo en vez del especialista que realmente lo trata.
-  if(s.back || s.joint || s.wrist)
-    // Antes decía "3 online consultations" aquí en Before Arrival — pero solo 1
-    // consulta va ANTES de llegar; las otras 2 (4 semanas y 6 meses después) ya
-    // se listan en el bloque de Follow Up más abajo (fu.push del deportólogo).
-    // Corrección de Alejo, 27-jul-2026: no duplicar el conteo.
-    items.push({t:"<b>1 online consultation with the sports doctor</b> — requires "+CBC+" and a recent MRI or X-ray report."});
-  // Neurólogo — lista exacta de las cotizaciones de Don Arnston y Mark Gillespie
-  if(s.neuro)
-    // ⚠ MISMO BUG que el deportólogo (27-jul): esta línea de Before Arrival ya
-    // mencionaba "at 2 and 6 months after", y el bloque de Follow Up más abajo
-    // vuelve a decir "2 and 6 months after the application" — quedaba duplicado
-    // en el documento. Before Arrival ahora solo cubre la consulta PREVIA;
-    // los 2 y 6 meses después viven únicamente en Follow Up.
-    items.push({t:"Online consultation with the <b>neurologist</b> before the procedure. The initial candidacy consultation is US$100, <b>credited in full toward your treatment</b> when you go ahead. Requires results from the last 6 months: CBC, vitamin B12, serum folate, serology (HIV, HBsAg, hepatitis C, syphilis), TSH and free T4, fasting glucose and HbA1c, ferritin, creatinine, AST/ALT/alkaline phosphatase/total bilirubin, vitamin D (25-OH), and a gadolinium-enhanced brain MRI."});
-  /* Artritis reumatoide: labs propios. Cualquier OTRA autoinmune (lupus,
-     psoriática...) conserva el panel genérico. */
-  if(s.rheumatoid)
-    items.push({t:"Online consultation with the <b>rheumatologist</b>, before the procedure (US$90, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: rheumatoid factor, anti-CCP antibody, ESR, CRP, anti-RA33 assay, ANA, radiographs of the affected joints."});
-  else if(s.autoimmune)
-    // Panel real (Alejo, 31-jul-2026): el genérico anterior ("marcadores
-    // inflamatorios y medicación actual") era una deducción. El de verdad es
-    // tiroideo — la mayoría de protocolos autoinmunes que llegan sin ser RA
-    // son Hashimoto/Graves.
-    items.push({t:"Online consultation with the <b>rheumatologist</b>, before the procedure (US$90, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: TSH, free T4, free T3 if indicated, anti-TPO antibodies, anti-thyroglobulin antibodies, lipid profile, CBC, metabolic panel, vitamin D."});
-  if(s.respiratory)
-    // Panel real (Alejo, 31-jul-2026): "imaging" a secas no decía TC/RM de
-    // pulmón, y faltaban alfa-1 antitripsina y PCR.
-    items.push({t:"Online consultation with the <b>internal medicine doctor</b>, before the procedure (US$70, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: CBC, metabolic panel, CT or MRI of the lungs, alpha-1 antitrypsin, CRP, pulmonary function tests."});
-  /* Hígado: señal propia, ya NO comparte el panel pulmonar de respiratorio. */
-  if(s.liver)
-    items.push({t:"Online consultation with the <b>internal medicine doctor</b>, before the procedure (US$70, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: AST, ALT, alkaline phosphatase, GGT, total and direct bilirubin, albumin, INR, CBC with platelets, creatinine, sodium, potassium, hepatitis B and C panel, alpha-fetoprotein, ferritin."});
-  if(s.face || s.hair)
-    // Antes decía "2 … before and after the procedure" — el "after" ya es el
-    // mismo chequeo de 3 meses que Follow Up lista aparte (fu.push estética).
-    // Before Arrival solo cubre la consulta previa; el total de 2 (Included,
-    // página 2) sigue cuadrando: 1 aquí + 1 en Follow Up.
-    // Panel real de la doctora (Alejo, 31-jul-2026): antes solo decía "CBC y
-    // perfil hormonal", faltaban glucosa, TSH, uroanálisis y PSA en hombres.
-    items.push({t:"<b>1 online consultation with the aesthetic doctor</b> before the procedure. Requires recent labs: CBC, fasting glucose, TSH, urinalysis, PSA in men over 50."});
-  if(s.pshot)
-    // Mismo ajuste: el "after" ya está en Follow Up (fu.push urólogo).
-    // Faltaban los niveles hormonales adrenales (Alejo, 31-jul-2026); el
-    // cuestionario ahora enlaza al formulario real que usa la clínica.
-    /* ⚠ Esta sección del cronograma pasa TODO por stripTags() antes de
-       mostrarse — nunca renderiza HTML, ni siquiera <b>. Un <a> aquí se
-       descartaría en silencio y el paciente vería el texto sin el enlace.
-       Se deja la URL en texto plano, visible y copiable. */
-    // Frase de labs AISLADA en su propia oración ("Requires recent labs: … .")
-    // para que limpiaCronograma() la reconozca y la convierta en chips; el
-    // cuestionario va aparte porque no es un examen de laboratorio.
-    items.push({t:"<b>1 online consultation with the urologist</b> before the procedure. Requires recent labs: CBC, PSA, liver enzymes/coagulation, adrenal hormone levels, complete metabolic panel, HbA1c. Also fill out the P-Shot questionnaire (shor.by/pshotquestionnaire)."});
-  /* Medicina funcional: SOLO en protocolos con IV / sistémicos.
-     ⚠ ERROR CORREGIDO (22-jul, lo cazó Alejo): esta línea iba SIN condición
-     ("funcional siempre"), heredada de una deducción vieja, así que una rodilla o
-     una columna imprimían una consulta de medicina funcional que no existe.
-     El pricing.xlsx es explícito: en back / big joint / small joint / hands van
-     3 consultas con DEPORTÓLOGO, y el funcional aparece en IV y sistémicos.
-     (27-jul: precisado a "1 … before the procedure" — el resto vive en Follow
-     Up, mismo criterio que el deportólogo/neurólogo/estética/urólogo arriba.) */
-  if(s.diabetes)
-    // Panel propio (Alejo, 31-jul-2026): antes diabetes caía en el genérico
-    // de medicina funcional, que no menciona ni HbA1c con el peso que
-    // necesita ni la función renal.
-    items.push({t:"<b>1 online consultation with the functional medicine doctor</b> before the procedure — the infusion is administered by our nursing team. Requires recent labs: HbA1c, fasting glucose, lipid panel, creatinine, eGFR, electrolytes, AST, ALT."});
-  else if(s.iv || s.intrathecal)
-    items.push({t:"<b>1 online consultation with the functional medicine doctor</b> before the procedure — the infusion is administered by our nursing team. Requires recent labs: CBC, hormone panel, CRP/ESR, metabolic panel, HbA1c, lipid profile, ferritin."});
+  if(s.back || s.joint || s.wrist){
+    const labs = formatLabList(SPEC_LABS.sports);
+    items.push({t:"<b>1 online consultation with the sports doctor</b> — requires "+labs+"."});
+  }
+
+  // Neurólogo — lista exacta
+  if(s.neuro){
+    const labs = formatLabList(SPEC_LABS.neuro);
+    items.push({t:"Online consultation with the <b>neurologist</b> before the procedure. The initial candidacy consultation is US$100, <b>credited in full toward your treatment</b> when you go ahead. Requires results from the last 6 months: "+labs+"."});
+  }
+
+  // Artritis reumatoide: labs propios
+  if(s.rheumatoid){
+    const labs = formatLabList(SPEC_LABS.rheumatoid);
+    items.push({t:"Online consultation with the <b>rheumatologist</b>, before the procedure (US$90, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: "+labs+"."});
+  }
+  else if(s.autoimmune){
+    const labs = formatLabList(SPEC_LABS.autoimmune);
+    items.push({t:"Online consultation with the <b>rheumatologist</b>, before the procedure (US$90, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: "+labs+"."});
+  }
+
+  if(s.respiratory){
+    const labs = formatLabList(SPEC_LABS.respiratory);
+    items.push({t:"Online consultation with the <b>internal medicine doctor</b>, before the procedure (US$70, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: "+labs+"."});
+  }
+
+  if(s.liver){
+    const labs = formatLabList(SPEC_LABS.liver);
+    items.push({t:"Online consultation with the <b>internal medicine doctor</b>, before the procedure (US$70, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: "+labs+"."});
+  }
+
+  if(s.face || s.hair){
+    const labs = formatLabList(SPEC_LABS.aesthetic);
+    items.push({t:"<b>1 online consultation with the aesthetic doctor</b> before the procedure. Requires recent labs: "+labs+"."});
+  }
+
+  if(s.pshot){
+    const labs = formatLabList(SPEC_LABS.pshot);
+    items.push({t:"<b>1 online consultation with the urologist</b> before the procedure. Requires recent labs: "+labs+". Also fill out the P-Shot questionnaire (shor.by/pshotquestionnaire)."});
+  }
+
+  if(s.diabetes){
+    const labs = formatLabList(SPEC_LABS.diabetes);
+    items.push({t:"<b>1 online consultation with the functional medicine doctor</b> before the procedure — the infusion is administered by our nursing team. Requires recent labs: "+labs+"."});
+  }
+  else if(s.iv || s.intrathecal){
+    const labs = formatLabList(SPEC_LABS.functional);
+    items.push({t:"<b>1 online consultation with the functional medicine doctor</b> before the procedure — the infusion is administered by our nursing team. Requires recent labs: "+labs+"."});
+  }
+
   return items;
 }
 
@@ -4830,7 +4973,7 @@ function buildSchedule(c){
        2 días más — si eso es lo correcto clínicamente, hay que decidirlo y
        entonces sí darle su propio día. Pendiente de confirmar con Alejo/Dra. */
     const advUpLines = (currentTier==="adv")
-      ? ["Full-body IV of "+TIER_EXO.adv+" billion exosomes"]
+      ? ["Full-body IV of "+advExoDose()+" billion exosomes"]
       : [];
     const needsLysate = !!(s.face || s.hair || s.pshot);
     const exoRoute   = (s.neuro || s.respiratory) ? "nebulized" : "IV";
@@ -4858,7 +5001,7 @@ function buildSchedule(c){
         { tag:"Full Body Treatment", cls:"full", li:(function(){
           const n=effectiveIVMsc(); const L=[];
           if(n>0) L.push("IV with "+n+" million Mesenchymal Stem Cells");
-          else L.push("Full-body IV of "+TIER_EXO.adv+" billion exosomes");
+          else L.push("Full-body IV of "+advExoDose()+" billion exosomes");
           if(s.neuro || s.respiratory) L.push("1ml (≈13 billion) exosomes "+exoRoute);
           L.push("Premedication"); return L; })() }
       ]});
@@ -7589,7 +7732,7 @@ function planFeatures(c, tier){
        Antes la rama IV decía "mayor dosis de exosomas", sin la cifra, y sumaba
        una consulta extra que no está en la regla. */
     if(tier==="adv") return ["Everything in the Essential treatment",
-        "+ Full-body IV of "+exoLabel(TIER_EXO.adv),
+        "+ Full-body IV of "+exoLabel(advExoDose()),
         "+ Hyperbaric oxygen therapy"].map(LZ);
     const dbl = Math.min(shown*2, MAX_IV_MSC);
     const upLine = shown<=0 ? "Double the cell dose"
@@ -7640,9 +7783,9 @@ function planFeatures(c, tier){
     return (det.length ? det : [l]).concat(extra).map(LZ);
   }
   if(tier==="adv") return ["Everything in the Essential treatment",
-      "+ Full-body IV of "+exoLabel(TIER_EXO.adv),
+      "+ Full-body IV of "+exoLabel(advExoDose()),
       "+ Hyperbaric oxygen therapy"].map(LZ);
-  return ["Everything in the Essential treatment","+ "+mscLabel(TIER_EXO.comMsc)+" systemic stem cells, full-body IV","Cancer markers + functional review","Full-body regenerative boost"].map(LZ);
+  return ["Everything in the Essential treatment","+ "+mscLabel(comMscExoDose())+" systemic stem cells, full-body IV","Cancer markers + functional review","Full-body regenerative boost"].map(LZ);
 }
 // A built combo overlays the preset; when one is active IT decides single-price,
 // never the preset underneath (that leaked "Combo IV and Back" state onto other cases).
