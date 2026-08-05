@@ -7114,7 +7114,7 @@ function conditionGroupsAll(c){
 function condicionesPorTratamiento(c){
   const bc = window.builtCombo;
   const etiquetas = (bc && bc.items && bc.items.length)
-    ? bc.items.filter(p => (p.cat||"") !== "Therapies" && (p.cat||"") !== "Included")
+    ? bc.items.filter(p => (p.cat||"") !== "Therapies" && (p.cat||"") !== "Included" && (p.id||"") !== "exohealing")
               .map(p => String(p.label || ""))
     : ((c && c.coreItems) ? c.coreItems.map(x => stripTags(String(x))) : []);
   const vistos = new Map();
