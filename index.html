@@ -3988,7 +3988,7 @@ const PRODUCTS = [
   // THERAPIES
   {id:"hyperbaric",cat:"Therapies",label:"Hyperbaric Therapy",price:0,days:0,cells:"included"},
   {id:"nad",cat:"Therapies",label:"NAD+",price:250,days:0,cells:"IV therapy"},
-  {id:"exohealing",cat:"Therapies",label:"Exosomes Healing Power (systemic surcharge)",price:300,days:0,cells:"systemic exosome surcharge"},
+  {id:"exohealing",cat:"Therapies",label:"Exosomes Healing Power",price:300,days:0,cells:"39 billion exosomes systemic"},
   {id:"ozone",cat:"Therapies",label:"Rectum Ozone Therapy",price:60,days:0,cells:"therapy"},
   {id:"eboo",cat:"Therapies",label:"EBOO",price:0,days:0,cells:"blood therapy"},
   {id:"painpump",cat:"Therapies",label:"Pain Pump",price:220,days:0,cells:"device"},
@@ -4435,17 +4435,6 @@ function tripleExoIfHealing(base){
   return Math.round(base * 3);
 }
 
-function advExoDose(){
-  return tripleExoIfHealing(TIER_EXO.adv);
-}
-
-function comExoDose(){
-  return tripleExoIfHealing(TIER_EXO.com);
-}
-
-function comMscExoDose(){
-  return tripleExoIfHealing(TIER_EXO.comMsc);
-}
 
 /* Exámenes específicos por condición. Patrón: condición → lista de exámenes. */
 const SPEC_LABS = {
@@ -4548,6 +4537,10 @@ function formatLabList(labs){
   return labs.join(", ");
 }
 
+function exoDoseForSchedule(){
+  return hasHealingPower() ? 39 : 13;
+}
+
 function bonusConsults(s){
   const items = [];
 
@@ -4563,24 +4556,24 @@ function bonusConsults(s){
     items.push({t:"Online consultation with the <b>neurologist</b> before the procedure. The initial candidacy consultation is US$100, <b>credited in full toward your treatment</b> when you go ahead. Requires results from the last 6 months: "+labs+"."});
   }
 
-  // Artritis reumatoide: labs propios
+  // Artritis reumatoide: labs propios. Excluir de funcional abajo.
   if(s.rheumatoid){
     const labs = formatLabList(SPEC_LABS.rheumatoid);
-    items.push({t:"Online consultation with the <b>rheumatologist</b>, before the procedure (US$90, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: "+labs+"."});
+    items.push({t:"Online consultation with the <b>rheumatologist</b> before the procedure. Requires recent labs: "+labs+"."});
   }
   else if(s.autoimmune){
     const labs = formatLabList(SPEC_LABS.autoimmune);
-    items.push({t:"Online consultation with the <b>rheumatologist</b>, before the procedure (US$90, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: "+labs+"."});
+    items.push({t:"Online consultation with the <b>rheumatologist</b> before the procedure. Requires recent labs: "+labs+"."});
   }
 
   if(s.respiratory){
     const labs = formatLabList(SPEC_LABS.respiratory);
-    items.push({t:"Online consultation with the <b>internal medicine doctor</b>, before the procedure (US$70, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: "+labs+"."});
+    items.push({t:"Online consultation with the <b>internal medicine doctor</b> before the procedure. Requires recent labs: "+labs+"."});
   }
 
   if(s.liver){
     const labs = formatLabList(SPEC_LABS.liver);
-    items.push({t:"Online consultation with the <b>internal medicine doctor</b>, before the procedure (US$70, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: "+labs+"."});
+    items.push({t:"Online consultation with the <b>internal medicine doctor</b> before the procedure. Requires recent labs: "+labs+"."});
   }
 
   if(s.face || s.hair){
@@ -4597,7 +4590,7 @@ function bonusConsults(s){
     const labs = formatLabList(SPEC_LABS.diabetes);
     items.push({t:"<b>1 online consultation with the functional medicine doctor</b> before the procedure — the infusion is administered by our nursing team. Requires recent labs: "+labs+"."});
   }
-  else if(s.iv || s.intrathecal){
+  else if(!s.rheumatoid && !s.autoimmune && !s.neuro && (s.iv || s.intrathecal)){
     const labs = formatLabList(SPEC_LABS.functional);
     items.push({t:"<b>1 online consultation with the functional medicine doctor</b> before the procedure — the infusion is administered by our nursing team. Requires recent labs: "+labs+"."});
   }
@@ -4973,7 +4966,7 @@ function buildSchedule(c){
        2 días más — si eso es lo correcto clínicamente, hay que decidirlo y
        entonces sí darle su propio día. Pendiente de confirmar con Alejo/Dra. */
     const advUpLines = (currentTier==="adv")
-      ? ["Full-body IV of "+advExoDose()+" billion exosomes"]
+      ? ["Full-body IV of "+TIER_EXO.adv+" billion exosomes"]
       : [];
     const needsLysate = !!(s.face || s.hair || s.pshot);
     const exoRoute   = (s.neuro || s.respiratory) ? "nebulized" : "IV";
@@ -4988,25 +4981,28 @@ function buildSchedule(c){
                   blocks:[{ tag:"Cancer Markers & Arrival", cls:"prep", li:d1 }] });
 
       // D2 — preparación
-      // El cliente quitó los exosomas del día de preparación y del día de la
-      // aplicación: solo van en el refuerzo del último día.
+      // Healing Power agrega 13B exosomas los días 2, 3, 4 (total 39B)
       const d2 = prepBaseLines(!!(s.face || s.hair), !!s.face);
       d2.push("Premedication");
+      if(hasHealingPower()) d2.push("1ml (≈13 billion) exosomes "+exoRoute);
       if(s.neuro || s.respiratory) d2.push("1ml (≈13 billion) exosomes "+exoRoute);
       if(needsLysate) d2.push("Blood extract for platelet lysate");
       rows.push({ kind:"day", n:d++, blocks:[{ tag:"Preparation", cls:"prep", li:d2 }] });
 
       // D3 — aplicación sistémica
+      // Healing Power agrega 13B exosomas los días 2, 3, 4 (total 39B)
       rows.push({ kind:"day", n:d++, blocks:[
         { tag:"Full Body Treatment", cls:"full", li:(function(){
           const n=effectiveIVMsc(); const L=[];
           if(n>0) L.push("IV with "+n+" million Mesenchymal Stem Cells");
-          else L.push("Full-body IV of "+advExoDose()+" billion exosomes");
+          else L.push("Full-body IV of "+TIER_EXO.adv+" billion exosomes");
+          if(hasHealingPower()) L.push("1ml (≈13 billion) exosomes "+exoRoute);
           if(s.neuro || s.respiratory) L.push("1ml (≈13 billion) exosomes "+exoRoute);
           L.push("Premedication"); return L; })() }
       ]});
 
       // D4 — refuerzo de exosomas
+      // Healing Power agrega 13B exosomas los días 2, 3, 4 (total 39B)
       rows.push({ kind:"day", n:d++, blocks:[
         { tag:"Exosome Boost", cls:"full",
           li:["Premedication", "1ml (≈13 billion) exosomes "+exoRoute] }
@@ -5092,7 +5088,7 @@ function buildSchedule(c){
   if(s.diabetes)
     fu.push("<b>Second visit:</b> diabetes needs a boost 3 to 6 months after this visit — same dose, same duration. It is not included in this quotation.");
   else if(s.neuro || s.autoimmune || s.respiratory || s.liver)
-    fu.push("<b>Second visit:</b> the protocol is designed as two visits — this one, and an identical one 6 to 8 weeks later with a 10% family discount. The second visit is not included in this quotation.");
+    fu.push("<b>Second visit:</b> the protocol is designed as two visits — this one, and an identical one 6 to 8 weeks later. The second visit is not included in this quotation.");
   fu.push("After the 6-month follow-up your doctor will determine whether a second application is advisable.");
   rows.push({ kind:"bonus", label:"BONUS", date:"After treatment", blocks:[{ li: fu }] });
   /* Cuidados inmediatos: solo donde hay aplicación local que deja al paciente
@@ -7732,7 +7728,7 @@ function planFeatures(c, tier){
        Antes la rama IV decía "mayor dosis de exosomas", sin la cifra, y sumaba
        una consulta extra que no está en la regla. */
     if(tier==="adv") return ["Everything in the Essential treatment",
-        "+ Full-body IV of "+exoLabel(advExoDose()),
+        "+ Full-body IV of "+exoLabel(TIER_EXO.adv),
         "+ Hyperbaric oxygen therapy"].map(LZ);
     const dbl = Math.min(shown*2, MAX_IV_MSC);
     const upLine = shown<=0 ? "Double the cell dose"
@@ -7783,9 +7779,9 @@ function planFeatures(c, tier){
     return (det.length ? det : [l]).concat(extra).map(LZ);
   }
   if(tier==="adv") return ["Everything in the Essential treatment",
-      "+ Full-body IV of "+exoLabel(advExoDose()),
+      "+ Full-body IV of "+exoLabel(TIER_EXO.adv),
       "+ Hyperbaric oxygen therapy"].map(LZ);
-  return ["Everything in the Essential treatment","+ "+mscLabel(comMscExoDose())+" systemic stem cells, full-body IV","Cancer markers + functional review","Full-body regenerative boost"].map(LZ);
+  return ["Everything in the Essential treatment","+ "+mscLabel(TIER_EXO.comMsc)+" systemic stem cells, full-body IV","Cancer markers + functional review","Full-body regenerative boost"].map(LZ);
 }
 // A built combo overlays the preset; when one is active IT decides single-price,
 // never the preset underneath (that leaked "Combo IV and Back" state onto other cases).
@@ -8140,7 +8136,6 @@ function includedFor(c){
   else if(s.intrathecal)   L.push("Premedication");
   if(currentTier!=="ess" && !s.intrathecal) L.push("Hyperbaric chamber");
 
-  if(!s.intrathecal) L.push("Exosomes Healing Power");
   L.push("Bilingual patient care coordinator");
   if(withHotel) L.push("Hotel for the treatment days", "Airport and clinic transfers");
   return L;
