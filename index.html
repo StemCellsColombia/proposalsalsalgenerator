@@ -4470,15 +4470,24 @@ function doseByArea(){
   const items = (window.builtCombo && window.builtCombo.items) || [];
   const out = {};
   const add = (k,n)=>{ if(n>0) out[k] = (out[k]||0) + n; };
+  /* ⚠ Cuenta de UNIDADES por categoría, no solo la dosis sumada. Con dos
+     rodillas de 50M cada una, out.joint suma 100 — que sirve para el total de
+     la portada, pero NO es "la dosis de una articulación". localBlocks()
+     necesita dividir por esta cuenta para decir "50M por articulación" en vez
+     de pegarle la etiqueta "per joint" al total. */
+  const contar = (k,n)=>{ if(n>0) out[k+"N"] = (out[k+"N"]||0) + 1; };
   items.forEach(p=>{
     const d = parseDoseStrings([p.cells]);
     const cat = p.cat||"", lbl = (p.label||"").toLowerCase();
     if(cat==="IV") add("iv", d.msc);
     else if(cat==="Intrathecal") add("intrathecal", d.msc);
     else if(cat==="Spine") add("spine", d.msc);
-    else if(cat==="Big Joints") add("joint", d.msc);
-    else if(cat==="Small Joints"){ if(/wrist/.test(lbl)) add("wrist", d.msc); else add("joint", d.msc); }
-    else if(cat==="Hands" || cat==="Other") add("joint", d.msc);
+    else if(cat==="Big Joints"){ add("joint", d.msc); contar("joint", d.msc); }
+    else if(cat==="Small Joints"){
+      if(/wrist/.test(lbl)){ add("wrist", d.msc); contar("wrist", d.msc); }
+      else { add("joint", d.msc); contar("joint", d.msc); }
+    }
+    else if(cat==="Hands" || cat==="Other"){ add("joint", d.msc); contar("joint", d.msc); }
     else if(cat==="Sexual Health") add("pshot", d.msc);
     else if(cat==="Anti-aging"){ if(/hair/.test(lbl)) add("hair", d.msc); else add("face", d.msc); }
     if(cat==="Exosomes") add("exo", d.exo);
@@ -4592,6 +4601,10 @@ function setPrepMode(m){
 function localBlocks(s){
   const D = doseByArea();
   const mm = (k,fb)=> (D[k]>0 ? D[k] : fb);   // real dose, else the standard default
+  /* Dosis POR UNIDAD para lo que se cuenta en piezas (articulación, muñeca):
+     el total ÷ cuántas hay. Con una sola, da lo mismo que mm(); con varias,
+     evita que la suma se imprima como si fuera la dosis de cada una. */
+  const mmUnidad = (k,fb)=> (D[k+"N"]>0 ? Math.round(D[k]/D[k+"N"]) : fb);
   const B = [];
   if(s.face || s.hair){
     const li = [];
@@ -4619,7 +4632,7 @@ function localBlocks(s){
   if(s.wrist)
     /* builtLocalLabel() primero: el rotulo fijo se comia el lado elegido en el
        carrito ("Right Wrist Treatment" imprimia "Tratamiento de muñeca"). */
-    B.push({tag: builtLocalLabel() || "Wrist Treatment", cls:"local", li:["With "+mm("wrist",30)+" million umbilical cord stem cells",exoLine("1ml (≈13 billion) exosomes"),APP_US]});
+    B.push({tag: builtLocalLabel() || "Wrist Treatment", cls:"local", li:["With "+mmUnidad("wrist",30)+" million umbilical cord stem cells per wrist",exoLine("1ml (≈13 billion) exosomes per wrist"),APP_US]});
   // Las sacroilíacas son 20M por articulación, no los 100M del bloque genérico:
   // se dejan caer en la red de seguridad, que lee la dosis real del catálogo.
   /* ⚠ La fascia plantar va ANTES que la articulación y la excluye: no se
@@ -4641,7 +4654,7 @@ function localBlocks(s){
             /* La dosis se dice POR ARTICULACIÓN: en un carrito de varias, el
                total no aclaraba si eran los millones de cada una o repartidos
                entre todas. (Alejo, 31-jul-2026) */
-            li:["With "+mm("joint", s.smallJoint?30:50)+" million umbilical cord stem cells per joint",
+            li:["With "+mmUnidad("joint", s.smallJoint?30:50)+" million umbilical cord stem cells per joint",
                 exoLine("1ml (≈13 billion) exosomes per joint"),
                 APP_US],
             details:"Joint(s) treated and how the dose is distributed — e.g. right knee: medial compartment + suprapatellar bursa…"});
@@ -5746,6 +5759,7 @@ function regexLocalizeES_(s){
     // otherwise "2M cells per kg" half-translates into "2M células madre per kg".
     .replace(/cells?\s*per\s*kg/gi, "células por kg")
     .replace(/\s+per joint\b/gi, " por articulación")
+    .replace(/\s+per wrist\b/gi, " por muñeca")
     /* Al escribir las dosis sin abreviar ("50 million stem cells" en vez de
        "50M stem cells"), las reglas genéricas de abajo dejaban engendros como
        "50 millones células madre". Estas tres van ANTES y ponen el "de".
