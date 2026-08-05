@@ -4373,7 +4373,15 @@ function comboSignals(c){
     smallJoint: /small joint|ankle|elbow|wrist/.test(txt),
     neuro: /neuro|brain|intrathecal/.test(c.id||""),
     autoimmune: /autoimmune|rheumatoid/.test(c.id||""),
-    respiratory: /respiratory|liver/.test(c.id||""),
+    /* Artritis reumatoide tiene SU PROPIO panel de laboratorio (no el
+       genérico de autoimmune): factor reumatoide, anti-CCP, VSG, PCR,
+       anti-RA33, ANA y radiografías. Señal aparte, por id exacto. */
+    rheumatoid: c.id==="rheumatoid",
+    /* Hígado tenía la MISMA señal que respiratorio: heredaba pruebas de
+       función pulmonar y hasta exosomas NEBULIZADOS (vía inhalada) en un
+       paciente hepático. Señal propia. (Alejo, 31-jul-2026) */
+    respiratory: /respiratory/.test(c.id||""),
+    liver: /liver/.test(c.id||""),
     diabetes: /diabetes/.test(c.id||""),
     lite: c.lite
   };
@@ -4399,19 +4407,43 @@ function bonusConsults(s){
     // en el documento. Before Arrival ahora solo cubre la consulta PREVIA;
     // los 2 y 6 meses después viven únicamente en Follow Up.
     items.push({t:"Online consultation with the <b>neurologist</b> before the procedure. The initial candidacy consultation is US$100, <b>credited in full toward your treatment</b> when you go ahead. Requires results from the last 6 months: CBC, vitamin B12, serum folate, serology (HIV, HBsAg, hepatitis C, syphilis), TSH and free T4, fasting glucose and HbA1c, ferritin, creatinine, AST/ALT/alkaline phosphatase/total bilirubin, vitamin D (25-OH), and a gadolinium-enhanced brain MRI."});
-  if(s.autoimmune)
-    items.push({t:"Online consultation with the <b>rheumatologist</b>, before the procedure (US$90, <b>credited in full toward your treatment</b> when you go ahead). Requires recent CBC, inflammatory markers (CRP/ESR) and your current medication list."});
+  /* Artritis reumatoide: labs propios. Cualquier OTRA autoinmune (lupus,
+     psoriática...) conserva el panel genérico. */
+  if(s.rheumatoid)
+    items.push({t:"Online consultation with the <b>rheumatologist</b>, before the procedure (US$90, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: rheumatoid factor, anti-CCP antibody, ESR, CRP, anti-RA33 assay, ANA, radiographs of the affected joints."});
+  else if(s.autoimmune)
+    // Panel real (Alejo, 31-jul-2026): el genérico anterior ("marcadores
+    // inflamatorios y medicación actual") era una deducción. El de verdad es
+    // tiroideo — la mayoría de protocolos autoinmunes que llegan sin ser RA
+    // son Hashimoto/Graves.
+    items.push({t:"Online consultation with the <b>rheumatologist</b>, before the procedure (US$90, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: TSH, free T4, free T3 if indicated, anti-TPO antibodies, anti-thyroglobulin antibodies, lipid profile, CBC, metabolic panel, vitamin D."});
   if(s.respiratory)
-    items.push({t:"Online consultation with the <b>internal medicine doctor</b>, before the procedure (US$70, <b>credited in full toward your treatment</b> when you go ahead). Requires recent CBC, imaging and pulmonary function tests where available."});
+    // Panel real (Alejo, 31-jul-2026): "imaging" a secas no decía TC/RM de
+    // pulmón, y faltaban alfa-1 antitripsina y PCR.
+    items.push({t:"Online consultation with the <b>internal medicine doctor</b>, before the procedure (US$70, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: CBC, metabolic panel, CT or MRI of the lungs, alpha-1 antitrypsin, CRP, pulmonary function tests."});
+  /* Hígado: señal propia, ya NO comparte el panel pulmonar de respiratorio. */
+  if(s.liver)
+    items.push({t:"Online consultation with the <b>internal medicine doctor</b>, before the procedure (US$70, <b>credited in full toward your treatment</b> when you go ahead). Requires recent labs: AST, ALT, alkaline phosphatase, GGT, total and direct bilirubin, albumin, INR, CBC with platelets, creatinine, sodium, potassium, hepatitis B and C panel, alpha-fetoprotein, ferritin."});
   if(s.face || s.hair)
     // Antes decía "2 … before and after the procedure" — el "after" ya es el
     // mismo chequeo de 3 meses que Follow Up lista aparte (fu.push estética).
     // Before Arrival solo cubre la consulta previa; el total de 2 (Included,
     // página 2) sigue cuadrando: 1 aquí + 1 en Follow Up.
-    items.push({t:"<b>1 online consultation with the aesthetic doctor</b> before the procedure. Doctor requires "+CBC+" and hormone panel."});
+    // Panel real de la doctora (Alejo, 31-jul-2026): antes solo decía "CBC y
+    // perfil hormonal", faltaban glucosa, TSH, uroanálisis y PSA en hombres.
+    items.push({t:"<b>1 online consultation with the aesthetic doctor</b> before the procedure. Requires recent labs: CBC, fasting glucose, TSH, urinalysis, PSA in men over 50."});
   if(s.pshot)
     // Mismo ajuste: el "after" ya está en Follow Up (fu.push urólogo).
-    items.push({t:"<b>1 online consultation with the urologist</b> before the procedure. Requires CBC, PSA, liver enzymes/coagulation, complete metabolic panel, HbA1c — and the P-Shot questionnaire."});
+    // Faltaban los niveles hormonales adrenales (Alejo, 31-jul-2026); el
+    // cuestionario ahora enlaza al formulario real que usa la clínica.
+    /* ⚠ Esta sección del cronograma pasa TODO por stripTags() antes de
+       mostrarse — nunca renderiza HTML, ni siquiera <b>. Un <a> aquí se
+       descartaría en silencio y el paciente vería el texto sin el enlace.
+       Se deja la URL en texto plano, visible y copiable. */
+    // Frase de labs AISLADA en su propia oración ("Requires recent labs: … .")
+    // para que limpiaCronograma() la reconozca y la convierta en chips; el
+    // cuestionario va aparte porque no es un examen de laboratorio.
+    items.push({t:"<b>1 online consultation with the urologist</b> before the procedure. Requires recent labs: CBC, PSA, liver enzymes/coagulation, adrenal hormone levels, complete metabolic panel, HbA1c. Also fill out the P-Shot questionnaire (shor.by/pshotquestionnaire)."});
   /* Medicina funcional: SOLO en protocolos con IV / sistémicos.
      ⚠ ERROR CORREGIDO (22-jul, lo cazó Alejo): esta línea iba SIN condición
      ("funcional siempre"), heredada de una deducción vieja, así que una rodilla o
@@ -4420,7 +4452,12 @@ function bonusConsults(s){
      3 consultas con DEPORTÓLOGO, y el funcional aparece en IV y sistémicos.
      (27-jul: precisado a "1 … before the procedure" — el resto vive en Follow
      Up, mismo criterio que el deportólogo/neurólogo/estética/urólogo arriba.) */
-  if(s.iv || s.intrathecal)
+  if(s.diabetes)
+    // Panel propio (Alejo, 31-jul-2026): antes diabetes caía en el genérico
+    // de medicina funcional, que no menciona ni HbA1c con el peso que
+    // necesita ni la función renal.
+    items.push({t:"<b>1 online consultation with the functional medicine doctor</b> before the procedure — the infusion is administered by our nursing team. Requires recent labs: HbA1c, fasting glucose, lipid panel, creatinine, eGFR, electrolytes, AST, ALT."});
+  else if(s.iv || s.intrathecal)
     items.push({t:"<b>1 online consultation with the functional medicine doctor</b> before the procedure — the infusion is administered by our nursing team. Requires recent labs: CBC, hormone panel, CRP/ESR, metabolic panel, HbA1c, lipid profile, ferritin."});
   return items;
 }
@@ -4898,7 +4935,7 @@ function buildSchedule(c){
   // de Kevin y Gracie hablan de un refuerzo a los 3-6 meses, no a las 6-8 semanas.
   if(s.diabetes)
     fu.push("<b>Second visit:</b> diabetes needs a boost 3 to 6 months after this visit — same dose, same duration. It is not included in this quotation.");
-  else if(s.neuro || s.autoimmune || s.respiratory)
+  else if(s.neuro || s.autoimmune || s.respiratory || s.liver)
     fu.push("<b>Second visit:</b> the protocol is designed as two visits — this one, and an identical one 6 to 8 weeks later with a 10% family discount. The second visit is not included in this quotation.");
   fu.push("After the 6-month follow-up your doctor will determine whether a second application is advisable.");
   rows.push({ kind:"bonus", label:"BONUS", date:"After treatment", blocks:[{ li: fu }] });
@@ -5414,6 +5451,19 @@ const LZMAP = {
   "Only the medication your doctor indicates. No anti-inflammatories or NSAIDs: they work against the cells.":"Solo la medicaci\u00f3n que le indique su m\u00e9dico. Nada de antiinflamatorios ni AINEs: trabajan en contra de las c\u00e9lulas.",
   "Bring a companion, and request airline wheelchair assistance if you must fly early.":"Venga acompa\u00f1ado, y pida asistencia en silla de ruedas a la aerol\u00ednea si tiene que volar antes.",
   "1ml (≈13 billion) exosomes per joint":"1ml (≈13 mil millones) de exosomas por articulación",
+  "1 online consultation with the sports doctor — requires recent Complete Blood Count (CBC) and a recent MRI or X-ray report.":"1 consulta en línea con el médico deportólogo — requiere un hemograma completo (CBC) reciente y un informe reciente de resonancia o radiografía.",
+  "Online consultation with the neurologist before the procedure. The initial candidacy consultation is US$100, credited in full toward your treatment when you go ahead. Requires results from the last 6 months: CBC, vitamin B12, serum folate, serology (HIV, HBsAg, hepatitis C, syphilis), TSH and free T4, fasting glucose and HbA1c, ferritin, creatinine, AST/ALT/alkaline phosphatase/total bilirubin, vitamin D (25-OH), and a gadolinium-enhanced brain MRI.":"Consulta en línea con el neurólogo antes del procedimiento. La consulta inicial de valoración cuesta US$100, que se abona por completo a su tratamiento si decide continuar. Requiere resultados de los últimos 6 meses: hemograma (CBC), vitamina B12, folato sérico, serología (VIH, HBsAg, hepatitis C, sífilis), TSH y T4 libre, glucosa en ayunas y HbA1c, ferritina, creatinina, AST/ALT/fosfatasa alcalina/bilirrubina total, vitamina D (25-OH), y una resonancia cerebral con gadolinio.",
+  "Online consultation with the rheumatologist, before the procedure (US$90, credited in full toward your treatment when you go ahead). Requires recent CBC, inflammatory markers (CRP/ESR) and your current medication list.":"Consulta en línea con el reumatólogo, antes del procedimiento (US$90, que se abona por completo a su tratamiento si decide continuar). Requiere hemograma reciente, marcadores inflamatorios (CRP/ESR) y su lista actual de medicamentos.",
+  "Online consultation with the rheumatologist, before the procedure (US$90, credited in full toward your treatment when you go ahead). Requires recent labs: rheumatoid factor, anti-CCP antibody, ESR, CRP, anti-RA33 assay, ANA, radiographs of the affected joints.":"Consulta en línea con el reumatólogo, antes del procedimiento (US$90, que se abona por completo a su tratamiento si decide continuar). Requiere exámenes recientes: factor reumatoide, anticuerpo anti-CCP, VSG, PCR, prueba anti-RA33, ANA, radiografías de las articulaciones afectadas.",
+  "Online consultation with the internal medicine doctor, before the procedure (US$70, credited in full toward your treatment when you go ahead). Requires recent CBC, imaging and pulmonary function tests where available.":"Consulta en línea con el médico internista, antes del procedimiento (US$70, que se abona por completo a su tratamiento si decide continuar). Requiere hemograma reciente, imágenes y pruebas de función pulmonar cuando estén disponibles.",
+  "1 online consultation with the aesthetic doctor before the procedure. Doctor requires recent Complete Blood Count (CBC) and hormone panel.":"1 consulta en línea con la médica estética antes del procedimiento. La doctora requiere un hemograma completo (CBC) reciente y perfil hormonal.",
+  "1 online consultation with the urologist before the procedure. Requires CBC, PSA, liver enzymes/coagulation, complete metabolic panel, HbA1c — and the P-Shot questionnaire.":"1 consulta en línea con el urólogo antes del procedimiento. Requiere hemograma (CBC), PSA, enzimas hepáticas/coagulación, perfil metabólico completo, HbA1c — y el cuestionario del P-Shot.",
+  "1 online consultation with the aesthetic doctor before the procedure. Requires recent labs: CBC, fasting glucose, TSH, urinalysis, PSA in men over 50.":"1 consulta en línea con la médica estética antes del procedimiento. Requiere exámenes recientes: hemograma (CBC), glucosa en ayunas, TSH, uroanálisis, PSA en hombres mayores de 50 años.",
+  "1 online consultation with the urologist before the procedure. Requires recent labs: CBC, PSA, liver enzymes/coagulation, adrenal hormone levels, complete metabolic panel, HbA1c. Also fill out the P-Shot questionnaire (shor.by/pshotquestionnaire).":"1 consulta en línea con el urólogo antes del procedimiento. Requiere exámenes recientes: hemograma (CBC), PSA, enzimas hepáticas/coagulación, niveles hormonales suprarrenales, perfil metabólico completo, HbA1c. Además debe diligenciar el cuestionario del P-Shot (shor.by/pshotquestionnaire).",
+  "Online consultation with the rheumatologist, before the procedure (US$90, credited in full toward your treatment when you go ahead). Requires recent labs: TSH, free T4, free T3 if indicated, anti-TPO antibodies, anti-thyroglobulin antibodies, lipid profile, CBC, metabolic panel, vitamin D.":"Consulta en línea con el reumatólogo, antes del procedimiento (US$90, que se abona por completo a su tratamiento si decide continuar). Requiere exámenes recientes: TSH, T4 libre, T3 libre si está indicado, anticuerpos anti-TPO, anticuerpos antitiroglobulina, perfil lipídico, hemograma (CBC), perfil metabólico, vitamina D.",
+  "Online consultation with the internal medicine doctor, before the procedure (US$70, credited in full toward your treatment when you go ahead). Requires recent labs: CBC, metabolic panel, CT or MRI of the lungs, alpha-1 antitrypsin, CRP, pulmonary function tests.":"Consulta en línea con el médico internista, antes del procedimiento (US$70, que se abona por completo a su tratamiento si decide continuar). Requiere exámenes recientes: hemograma (CBC), perfil metabólico, TC o RM de pulmón, alfa-1 antitripsina, PCR, pruebas de función pulmonar.",
+  "Online consultation with the internal medicine doctor, before the procedure (US$70, credited in full toward your treatment when you go ahead). Requires recent labs: AST, ALT, alkaline phosphatase, GGT, total and direct bilirubin, albumin, INR, CBC with platelets, creatinine, sodium, potassium, hepatitis B and C panel, alpha-fetoprotein, ferritin.":"Consulta en línea con el médico internista, antes del procedimiento (US$70, que se abona por completo a su tratamiento si decide continuar). Requiere exámenes recientes: AST, ALT, fosfatasa alcalina, GGT, bilirrubina total y directa, albumína, INR, hemograma (CBC) con plaquetas, creatinina, sodio, potasio, panel de hepatitis B y C, alfafetoproteína, ferritina.",
+  "1 online consultation with the functional medicine doctor before the procedure — the infusion is administered by our nursing team. Requires recent labs: HbA1c, fasting glucose, lipid panel, creatinine, eGFR, electrolytes, AST, ALT.":"1 consulta en línea con el médico de medicina funcional antes del procedimiento — la infusión la administra nuestro equipo de enfermería. Requiere exámenes recientes: HbA1c, glucosa en ayunas, perfil lipídico, creatinina, tasa de filtración glomerular (eGFR), electrolitos, AST, ALT.",
   "Hotel, transfers, coordinator & follow-up":"Hotel, traslados, coordinador y seguimiento",
   "Bilingual coordinator & follow-up":"Coordinador bilingüe y seguimiento",
   "Hotel & transfers — on request":"Hotel y traslados — a solicitud",
@@ -8356,17 +8406,24 @@ function limpiaCronograma(){
 
     /* ── 2. requisitos de laboratorio a etiquetas ── */
     tl.querySelectorAll(".tlrow.soft .ts").forEach(ts=>{
-      const t = ts.textContent;
-      const m = /Requires? recent labs?:\s*([^.]+)\./i.exec(t);
-      if(!m) return;
-      const chips = m[1].split(/,\s*/).map(s=>s.trim()).filter(Boolean);
-      if(chips.length < 3) return;                    // no vale la pena por dos
-      ts.textContent = t.replace(m[0], "").replace(/\s{2,}/g," ").trim();
-      const cont = document.createElement("div");
-      cont.className = "tl-reqs";
-      cont.innerHTML = '<span class="tl-reql">'+LZ("Labs to bring")+'</span>'+
-        chips.map(x=>'<span class="tl-req">'+x+'</span>').join("");
-      ts.parentNode.appendChild(cont);
+      let t = ts.textContent;
+      const patron = /(?:Requires? recent labs?|Requiere\w*\s+ex[aá]menes?\s+recientes?):\s*([^.]+)\./gi;
+      const grupos = [];
+      let m;
+      while((m = patron.exec(t)) !== null){
+        const chips = m[1].split(/,\s*/).map(s=>s.trim()).filter(Boolean);
+        if(chips.length >= 3) grupos.push({frase:m[0], chips});   // no vale la pena por dos
+      }
+      if(!grupos.length) return;
+      grupos.forEach(g => { t = t.replace(g.frase, ""); });
+      ts.textContent = t.replace(/\s{2,}/g," ").trim();
+      grupos.forEach(g=>{
+        const cont = document.createElement("div");
+        cont.className = "tl-reqs";
+        cont.innerHTML = '<span class="tl-reql" contenteditable="true">'+LZ("Labs to bring")+'</span>'+
+          g.chips.map(x=>'<span class="tl-req" contenteditable="true">'+x+'</span>').join("");
+        ts.parentNode.appendChild(cont);
+      });
     });
 
     /* ── nota única de premedicación ── */
