@@ -3622,8 +3622,7 @@ const APP_US =
    —la que sale en el cronograma— decia "light sedation": la misma cotizacion
    se contradecia. Fluoroscopia es columna, y la columna va profunda. */
 const APP_FLUORO =
-  "In operating room, under deep sedation and fluoroscopy guidance. " +
-  "By anesthesiologist, expert in stem cell application.";
+  "Operating room — deep sedation & fluoroscopy-guided. By anesthesiologist.";
 
 /* ════════════════════════════════════════════════════════════════════════
    FUENTE ÚNICA DE LOS TAGS DE NIVEL
@@ -3952,7 +3951,7 @@ const PRODUCTS = [
   {id:"ligament",cat:"Other",label:"Ligament Treatment",price:3500,days:2,cells:"20M MSCs"},
   {id:"groin",cat:"Other",label:"Groin Treatment",price:3500,days:2,cells:"20M MSCs + 13B exosomes"},
   {id:"perineural",cat:"Other",label:"Perineural Treatment",price:3750,days:2,cells:"20M MSCs"},
-  {id:"sacro",cat:"Other",label:"Sacro-Iliac Joints (right and left)",price:5000,days:2,cells:"20M MSCs per joint"},
+  {id:"sacro",cat:"Other",label:"Sacro-Iliac Joints (right and left)",price:5000,days:2,cells:"40M MSCs (20M per sacroiliac joint, both sides)"},
   {id:"plantar1",cat:"Other",label:"Plantar Fasciitis (1 foot)",price:3850,days:2,cells:"20M MSCs + 13B exosomes"},
   {id:"plantar2",cat:"Other",label:"Plantar Fasciitis (2 feet)",price:5300,days:2,cells:"20M MSCs + 13B exosomes per foot"},
   {id:"cervical",cat:"Other",label:"Cervical Application",price:200,days:2,cells:"application"},
@@ -4590,9 +4589,12 @@ function bonusConsults(s){
     const labs = formatLabList(SPEC_LABS.diabetes);
     items.push({t:"<b>1 online consultation with the functional medicine doctor</b> before the procedure — the infusion is administered by our nursing team. Requires recent labs: "+labs+"."});
   }
-  else if(!s.rheumatoid && !s.autoimmune && !s.neuro && (s.iv || s.intrathecal)){
-    const labs = formatLabList(SPEC_LABS.functional);
-    items.push({t:"<b>1 online consultation with the functional medicine doctor</b> before the procedure — the infusion is administered by our nursing team. Requires recent labs: "+labs+"."});
+  // NO funcional si ya tiene un especialista (rheumatoid, autoimmune, respiratory, liver, neuro)
+  else if(s.iv || s.intrathecal){
+    if(!s.rheumatoid && !s.autoimmune && !s.respiratory && !s.liver && !s.neuro){
+      const labs = formatLabList(SPEC_LABS.functional);
+      items.push({t:"<b>1 online consultation with the functional medicine doctor</b> before the procedure — the infusion is administered by our nursing team. Requires recent labs: "+labs+"."});
+    }
   }
 
   return items;
@@ -4798,7 +4800,7 @@ function localBlocks(s){
     // Spine/espalda (decisión de Alejo, 21-jul): los exosomas van "casi nunca" y
     // el lisado "a veces" — por eso NO se ponen por defecto. Se agregan por paciente
     // desde el editor "día a día" del panel (+ Añadir línea) cuando el caso lo pida.
-    B.push({tag:"Back Treatment", cls:"local", li:["With "+mm("spine",100)+" million umbilical cord stem cells",APP_FLUORO], details:"Exact levels and distribution — e.g. L4-L5 and L5-S1 discs, bilateral facet joints L3-L4…"});
+    B.push({tag:"Back Treatment", cls:"local", li:["Spine: "+mm("spine",100)+" million umbilical cord stem cells",APP_FLUORO], details:"Exact levels and distribution — e.g. L4-L5 and L5-S1 discs, bilateral facet joints L3-L4…"});
 
   /* RED DE SEGURIDAD — ningún tratamiento puede quedarse sin su día.
      Los detectores de arriba solo reconocen joint/back/face/hair/pshot/wrist.
@@ -6977,8 +6979,7 @@ const COND_CATS = {
       {n:{en:"Graves' disease", es:"Enfermedad de Graves"}},
       {n:{en:"Myasthenia gravis", es:"Miastenia gravis"}},
       {n:{en:"Mixed connective tissue disease", es:"Enfermedad mixta del tejido conectivo"}},
-      {n:{en:"Chronic urticaria", es:"Urticaria crónica"}},
-      {n:{en:"Fibromyalgia", es:"Fibromialgia"}}
+      {n:{en:"Chronic urticaria", es:"Urticaria crónica"}}
     ]
   }
 };
@@ -7025,7 +7026,7 @@ function groupFromText(s){
   if(has("sexual","erectile","penil","p shot","v-shot","vshot","peyronie")) return "sexual";
   if(has("respir","lung","pulmon","copd","epoc","fibrosis","covid","asthma","bronchit","emphysema")) return "respiratory";
   if(has("crohn","colitis","ibd","ibs","gut","intestin","gastritis","digest","liver","hepatic")) return "digestive";
-  if(has("autoimm","rheum","lupus","sjogren","psoria","hashimoto","spondylit","scleroderma","fibromyalgia")) return "autoimmune";
+  if(has("autoimm","rheum","lupus","sjogren","psoria","hashimoto","spondylit","scleroderma")) return "autoimmune";
   /* "arthritis" a secas es ambiguo: la reumatoide es autoinmune y la artrosis
      es articular. Va DESPUÉS de autoimmune para que "rheumatoid arthritis"
      ya se haya resuelto arriba. */
