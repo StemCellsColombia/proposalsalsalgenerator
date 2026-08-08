@@ -2409,6 +2409,24 @@ body.p5z1 .sedopt-p{ font-size:10.6px; line-height:1.38; }
    Es orientación, no jerarquía: se queda en gris de estructura y sin filo. */
 .mark .l{ color:var(--mut) !important; font-size:10.2px !important; }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   SIN BLOQUEOS — VA AL FINAL A PROPÓSITO (Alejo, 8-ago-2026)
+   "quiero que no haya pasos bloqueados, quiero que todo funcione sin
+   bloqueos. Nada".
+   La guía paso a paso se retiró del HTML, pero sus reglas seguían en la hoja:
+   .card.locked > .cb{display:none !important} escondía el CONTENIDO de una
+   tarjeta. Bastaba con que algo volviera a poner esa clase para que el panel
+   quedara muerto en "Paso 1". Estas reglas van de últimas porque en esta hoja
+   el bloque final es el que manda: aunque alguien reponga la clase, la
+   tarjeta se ve y se edita igual.
+   ══════════════════════════════════════════════════════════════════════════ */
+.card.locked{ opacity:1 !important; }
+.card.locked > .ch{ cursor:pointer !important; }
+.card.locked > .cb{ display:block !important; }
+.ctrl .card.locked > .cb{ display:block !important; }
+.ctrl.nowiz .card.locked > .cb{ display:block !important; }
+.cnext[disabled]{ opacity:1 !important; cursor:pointer !important; pointer-events:auto !important; }
+
 </style>
 </head>
 <body>
@@ -3282,7 +3300,7 @@ const CATALOG = {
   hand2:   { name: "Both hands — 20 million stem cells each", price: 5000 },
   tendon:  { name: "Tendon or ligament application — 20 million stem cells", price: 3500 },
   muscle:  { name: "Muscle application — 30 million stem cells", price: 3750 },
-  sacro:   { name: "Both sacroiliac joints — 20 million stem cells per joint", price: 5000 },
+  sacro:   { name: "Both sacroiliac joints — 40 million stem cells total (20 per side)", price: 5000 },
   plantar: { name: "Plantar fasciitis (1 foot) — 20 million stem cells + 13 billion exosomes", price: 3850 },
   plantar2:{ name: "Plantar fasciitis (both feet) — 20 million stem cells + 13 billion exosomes per foot", price: 5300 },
   thumb:   { name: "Thumb or big toe — 10 million stem cells", price: 1750 },
@@ -3951,7 +3969,7 @@ const PRODUCTS = [
   {id:"ligament",cat:"Other",label:"Ligament Treatment",price:3500,days:2,cells:"20 million MSCs"},
   {id:"groin",cat:"Other",label:"Groin Treatment",price:3500,days:2,cells:"20 million MSCs + 13 billion exosomes"},
   {id:"perineural",cat:"Other",label:"Perineural Treatment",price:3750,days:2,cells:"20 million MSCs"},
-  {id:"sacro",cat:"Other",label:"Sacro-Iliac Joints (right and left)",price:5000,days:2,cells:"40 million MSCs (20 million per sacroiliac joint, both sides)"},
+  {id:"sacro",cat:"Other",label:"Sacro-Iliac Joints (right and left)",price:5000,days:2,cells:"40 million MSCs total (20 per side)"},
   {id:"plantar1",cat:"Other",label:"Plantar Fasciitis (1 foot)",price:3850,days:2,cells:"20 million MSCs + 13 billion exosomes"},
   {id:"plantar2",cat:"Other",label:"Plantar Fasciitis (2 feet)",price:5300,days:2,cells:"20 million MSCs + 13 billion exosomes per foot"},
   {id:"cervical",cat:"Other",label:"Cervical Application",price:200,days:2,cells:"application"},
@@ -8257,7 +8275,9 @@ function planFullList(c, tier){
     '^\\+ Hyperbaric oxygen therapy$',
     '^\\+ Terapia con ox\u00edgeno hiperb\u00e1rico$',
     '^Everything in the (Essential|Advanced) treatment$',
-    '^Todo lo del tratamiento (Essential|Advanced)$'
+    '^Todo lo del tratamiento (Essential|Advanced)$',
+    '^Deep Sedation package$',
+    '^Paquete de sedación profunda$'
   ].join('|'), 'i');
 
   const vistos = new Set();
@@ -9611,7 +9631,14 @@ const WIZ = [
     hint:"Último paso: quién envía la cotización, el hotel y las noches. Después ya puede imprimir el PDF." }
 ];
 let wizMax = 0;                                   // hasta qué paso se ha liberado
-let wizOff = (localStorage.getItem("scc_wiz_off")==="1");
+/* ⚠ SIN BLOQUEOS, NUNCA (Alejo, 8-ago-2026: "quiero que no haya pasos
+   bloqueados, quiero que todo funcione sin bloqueos. Nada").
+   Antes esto leía localStorage y un valor viejo guardado podía volver a
+   encender la guía y dejar las tarjetas en modo "locked" —con el cuerpo
+   escondido por CSS— aunque la guía ya estuviera retirada del HTML.
+   Ahora arranca SIEMPRE en modo experto: todas las secciones abiertas.
+   No volver a leer scc_wiz_off aquí. */
+let wizOff = true;
 
 function wizIndex(id){ return WIZ.findIndex(w=>w.id===id); }
 function wizAvanzar(i){
@@ -9642,9 +9669,11 @@ function wizPinta(){
     const ok = w.listo ? w.listo() : (i < wizMax);
     if(ok) hechos++;
     el.classList.toggle("done", ok);
-    el.classList.toggle("locked", !wizOff && i > wizMax);
+    /* Nunca se bloquea una tarjeta ni se deshabilita su botón: el asesor entra
+       y edita cualquier sección en el orden que quiera. (Alejo, 8-ago-2026) */
+    el.classList.remove("locked");
     const b=el.querySelector(".cnext");
-    if(b && w.listo) b.disabled = !w.listo();
+    if(b) b.disabled = false;
   });
   const actual = Math.min(wizMax, WIZ.length-1);
   const tt=document.getElementById("wiz-title");
